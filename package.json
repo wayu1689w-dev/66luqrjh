@@ -1,0 +1,14 @@
+{
+  "name": "rolldown-repl-project",
+  "type": "module",
+  "scripts": {
+    "build": "rolldown -c"
+  },
+  "devDependencies": {
+    "rolldown": "npm:@rolldown/browser@latest"
+  },
+  "stackblitz": {
+    "installDependencies": false,
+    "startCommand": "pnpm install && pnpm build"
+  }
+}
