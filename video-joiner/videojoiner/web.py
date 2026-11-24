@@ -2,7 +2,9 @@
 Drag to reorder clips, crossfade, background music, live progress.
 Standard library only."""
 import json
+import shutil
 import tempfile
+import time
 import threading
 import uuid
 from email import message_from_bytes
@@ -14,6 +16,7 @@ from .joiner import join_videos, JoinError
 
 JOBS: dict = {}  # id -> {"progress", "status", "error", "file"}
 ROOT = Path(tempfile.mkdtemp(prefix="videojoiner-"))
+TTL = 3600  # seconds a finished job is kept
 
 PAGE = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width">
 <title>Video Joiner</title>
@@ -79,6 +82,15 @@ async function poll(id){
 </script>"""
 
 
+def _reap():
+    """Delete jobs (and their temp files) older than TTL."""
+    now = time.time()
+    for jid in [j for j, v in list(JOBS.items())
+                if v["status"] != "running" and now - v["created"] > TTL]:
+        JOBS.pop(jid, None)
+        shutil.rmtree(ROOT / jid, ignore_errors=True)
+
+
 def _run(job_id, paths, out, opts):
     job = JOBS[job_id]
     try:
@@ -86,6 +98,10 @@ def _run(job_id, paths, out, opts):
         job.update(status="done", file=str(out), progress=1.0)
     except (JoinError, OSError) as e:
         job.update(status="error", error=str(e))
+    finally:  # uploads are no longer needed; keep only the result
+        for p in [*paths, opts.get("music")]:
+            if p:
+                Path(p).unlink(missing_ok=True)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -145,7 +161,8 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(400, "ค่าตัวเลขไม่ถูกต้อง", "text/plain; charset=utf-8")
         if not paths:
             return self._send(400, "กรุณาเลือกไฟล์", "text/plain; charset=utf-8")
-        JOBS[job_id] = {"status": "running", "progress": 0.0}
+        _reap()
+        JOBS[job_id] = {"status": "running", "progress": 0.0, "created": time.time()}
         threading.Thread(target=_run, args=(job_id, paths, d / "joined.mp4", opts),
                          daemon=True).start()
         self._json(200, {"id": job_id})
