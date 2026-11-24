@@ -32,3 +32,10 @@
 
 ชื่อโมเดลตั้งผ่าน `GEMINI_STT_MODEL` / `GEMINI_TTS_MODEL` / `GEMINI_VOICE` — ค่าเริ่มต้นเป็นเพียงค่าเดา ต้องตรวจกับเอกสารปัจจุบัน
 ตอนนี้ยังไม่ได้ฝังซับลงภาพและไม่ได้เชื่อมกับหน้าเว็บ
+
+## ติดตั้งเป็นปลั๊กอิน Claude Code
+    /plugin marketplace add wayu1689w-dev/66luqrjh
+    /plugin install video-joiner@66luqrjh
+
+จากนั้นสั่ง Claude ว่า "ต่อวิดีโอเหล่านี้" สกิล `join-videos` จะทำงานให้ (ต้องมี ffmpeg)
+ถ้าจะใช้ Gemini ให้ตั้ง `GEMINI_API_KEY` จาก Google AI Studio ใน environment
