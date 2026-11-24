@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  video-joiner-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: ffmpeg version (needs >= 5.1)
+        run: ffmpeg -version | head -1
+      - name: Unit tests
+        working-directory: video-joiner
+        run: python -m unittest discover tests -v
+
+  manifests-and-tokens:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Plugin manifests are valid JSON with required fields
+        run: |
+          python3 - <<'PY'
+          import json
+          p = json.load(open("video-joiner/.claude-plugin/plugin.json"))
+          m = json.load(open(".claude-plugin/marketplace.json"))
+          assert p["name"] == "video-joiner", p
+          assert any(x["name"] == p["name"] for x in m["plugins"]), "plugin missing from marketplace"
+          print("manifests OK")
+          PY
+      - name: tokens.css is balanced and every var() resolves
+        run: |
+          python3 - <<'PY'
+          import re
+          s = open("tokens.css").read()
+          assert s.count("{") == s.count("}"), "unbalanced braces"
+          defs = set(re.findall(r"(--[\w-]+)\s*:", s))
+          missing = set(re.findall(r"var\((--[\w-]+)\)", s)) - defs
+          assert not missing, missing
+          print("tokens OK")
+          PY
