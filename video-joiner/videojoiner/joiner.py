@@ -1,13 +1,10 @@
-"""Join several video clips into one file and keep the audio in sync.
+"""Join video clips into one file, keeping every clip's audio.
 
-Why audio usually disappears when joining clips:
-  * some clips have no audio stream at all,
-  * clips use different sample rates / channel layouts,
-  * the plain "concat demuxer" copies streams and breaks on any mismatch.
+Features: normalised size/fps/audio, silent-track fill for clips without
+sound, optional crossfade between clips, optional background music mixed
+under the original audio, and progress reporting.
 
-Fix: normalise every clip (size, fps, sample rate, stereo) and give silent
-clips a generated silent track of the same length, then use ffmpeg's concat
-*filter*, which always re-encodes video and audio together.
+Needs ffmpeg >= 5.1 (uses amix normalize=0).
 """
 from __future__ import annotations
 
@@ -15,6 +12,7 @@ import json
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable, Optional
 
 SAMPLE_RATE = 48000
 
@@ -51,47 +49,98 @@ def probe(path: str) -> Clip:
                 int(video["width"]), int(video["height"]))
 
 
+def total_duration(clips: list[Clip], crossfade: float = 0.0) -> float:
+    return sum(c.duration for c in clips) - crossfade * (len(clips) - 1)
+
+
 def build_command(clips: list[Clip], output: str, width: int = 1280,
-                  height: int = 720, fps: int = 30, mute: bool = False) -> list[str]:
+                  height: int = 720, fps: int = 30, mute: bool = False,
+                  crossfade: float = 0.0, music: Optional[str] = None,
+                  music_volume: float = 0.25) -> list[str]:
     """Build the ffmpeg command. Pure function, so it is easy to test."""
     if not clips:
         raise JoinError("ต้องมีอย่างน้อย 1 คลิป")
+    if crossfade < 0:
+        raise JoinError("crossfade ต้องไม่ติดลบ")
+    if len(clips) == 1:
+        crossfade = 0.0
+    if crossfade and min(c.duration for c in clips) < crossfade * 2:
+        raise JoinError("มีคลิปสั้นกว่า 2 เท่าของเวลา crossfade")
+
     cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error"]
     for c in clips:
         cmd += ["-i", c.path]
+    if music:
+        cmd += ["-stream_loop", "-1", "-i", music]  # loop short tracks
+    n = len(clips)
 
-    parts, labels = [], []
-    silent_inputs = 0
+    f = []
     for i, c in enumerate(clips):
-        parts.append(
+        f.append(
             f"[{i}:v]scale={width}:{height}:force_original_aspect_ratio=decrease,"
             f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={fps},"
-            f"format=yuv420p[v{i}]")
+            f"format=yuv420p,settb=AVTB[v{i}]")
         if c.has_audio and not mute:
-            parts.append(
-                f"[{i}:a]aresample={SAMPLE_RATE},"
-                f"aformat=sample_fmts=fltp:channel_layouts=stereo[a{i}]")
-        else:  # no audio (or muted): generate silence of the exact clip length
-            parts.append(
-                f"anullsrc=r={SAMPLE_RATE}:cl=stereo,atrim=duration={c.duration:.3f},"
-                f"asetpts=N/SR/TB[a{i}]")
-            silent_inputs += 1
-        labels.append(f"[v{i}][a{i}]")
+            f.append(f"[{i}:a]aresample={SAMPLE_RATE},"
+                     f"aformat=sample_fmts=fltp:channel_layouts=stereo[a{i}]")
+        else:  # silence of the exact clip length keeps everything in sync
+            f.append(f"anullsrc=r={SAMPLE_RATE}:cl=stereo,"
+                     f"atrim=duration={c.duration:.3f},asetpts=N/SR/TB[a{i}]")
 
-    parts.append("".join(labels) + f"concat=n={len(clips)}:v=1:a=1[v][a]")
-    cmd += ["-filter_complex", ";".join(parts), "-map", "[v]", "-map", "[a]",
+    if crossfade:
+        vprev, aprev, acc = "v0", "a0", clips[0].duration
+        for k in range(1, n):
+            offset = acc - crossfade
+            vout = "v" if k == n - 1 else f"vx{k}"
+            aout = "amain" if k == n - 1 else f"ax{k}"
+            f.append(f"[{vprev}][v{k}]xfade=transition=fade:duration={crossfade}:"
+                     f"offset={offset:.3f}[{vout}]")
+            f.append(f"[{aprev}][a{k}]acrossfade=d={crossfade}[{aout}]")
+            vprev, aprev, acc = vout, aout, acc + clips[k].duration - crossfade
+        if n == 1:
+            raise AssertionError  # unreachable: crossfade zeroed above
+    else:
+        f.append("".join(f"[v{i}][a{i}]" for i in range(n)) +
+                 f"concat=n={n}:v=1:a=1[v][amain]")
+
+    if music:
+        total = total_duration(clips, crossfade)
+        f.append(f"[{n}:a]aresample={SAMPLE_RATE},"
+                 f"aformat=sample_fmts=fltp:channel_layouts=stereo,"
+                 f"volume={music_volume},atrim=duration={total:.3f},"
+                 f"afade=t=out:st={max(total - 2, 0):.3f}:d=2[bg]")
+        f.append("[amain][bg]amix=inputs=2:duration=first:normalize=0[a]")
+    else:
+        f.append("[amain]anull[a]")
+
+    cmd += ["-filter_complex", ";".join(f), "-map", "[v]", "-map", "[a]",
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
-            "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", output]
+            "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
+            "-progress", "pipe:1", "-nostats", output]
     return cmd
 
 
-def join_videos(paths: list[str], output: str, **opts) -> Path:
+def join_videos(paths: list[str], output: str,
+                progress: Optional[Callable[[float], None]] = None,
+                **opts) -> Path:
+    """Join clips. `progress` gets a 0..1 fraction while encoding."""
     clips = [probe(p) for p in paths]
     cmd = build_command(clips, output, **opts)
-    run = subprocess.run(cmd, capture_output=True, text=True)
-    if run.returncode != 0:
-        raise JoinError(f"ffmpeg ล้มเหลว: {run.stderr.strip()}")
-    result = probe(output)
-    if not result.has_audio:
+    total = total_duration(clips, opts.get("crossfade", 0.0) if len(clips) > 1 else 0.0)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    for line in proc.stdout:
+        if line.startswith("out_time_us=") and progress and total > 0:
+            try:
+                progress(min(int(line.split("=")[1]) / 1e6 / total, 1.0))
+            except ValueError:  # ffmpeg prints N/A at the start
+                pass
+    err = proc.stderr.read()
+    proc.stdout.close()
+    proc.stderr.close()
+    if proc.wait() != 0:
+        raise JoinError(f"ffmpeg ล้มเหลว: {err.strip()}")
+    if progress:
+        progress(1.0)
+    if not probe(output).has_audio:
         raise JoinError("ไฟล์ผลลัพธ์ไม่มีเสียง")
     return Path(output)
