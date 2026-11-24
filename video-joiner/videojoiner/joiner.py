@@ -56,7 +56,8 @@ def total_duration(clips: list[Clip], crossfade: float = 0.0) -> float:
 def build_command(clips: list[Clip], output: str, width: int = 1280,
                   height: int = 720, fps: int = 30, mute: bool = False,
                   crossfade: float = 0.0, music: Optional[str] = None,
-                  music_volume: float = 0.25) -> list[str]:
+                  music_volume: float = 0.25,
+                  music_loop: bool = True) -> list[str]:
     """Build the ffmpeg command. Pure function, so it is easy to test."""
     if not clips:
         raise JoinError("ต้องมีอย่างน้อย 1 คลิป")
@@ -71,7 +72,9 @@ def build_command(clips: list[Clip], output: str, width: int = 1280,
     for c in clips:
         cmd += ["-i", c.path]
     if music:
-        cmd += ["-stream_loop", "-1", "-i", music]  # loop short tracks
+        if music_loop:  # loop short tracks (background music); voiceover plays once
+            cmd += ["-stream_loop", "-1"]
+        cmd += ["-i", music]
     n = len(clips)
 
     f = []

@@ -22,3 +22,13 @@
 - เข้ารหัสใหม่ทุกครั้ง (ช้ากว่าการ copy stream)
 - คลิปต้องยาวอย่างน้อย 2 เท่าของเวลา crossfade
 - เว็บลบไฟล์ที่อัปโหลดทันทีหลังต่อเสร็จ และลบผลลัพธ์เมื่อเกิน 1 ชั่วโมง (ตอนมีงานใหม่เข้า)
+
+## Gemini (โครง — ยังไม่ได้ทดสอบกับ API จริง)
+ตั้ง `GEMINI_API_KEY` (จาก Google AI Studio) แล้ว:
+
+    python -m videojoiner.gemini subs joined.mp4 -o subs.srt --lang th   # ซับไตเติล
+    python -m videojoiner.gemini speak script.txt -o voice.wav           # เสียงพากย์
+    python -m videojoiner a.mp4 b.mp4 --voiceover voice.wav -o out.mp4   # ใส่เสียงพากย์ (เล่นครั้งเดียว)
+
+ชื่อโมเดลตั้งผ่าน `GEMINI_STT_MODEL` / `GEMINI_TTS_MODEL` / `GEMINI_VOICE` — ค่าเริ่มต้นเป็นเพียงค่าเดา ต้องตรวจกับเอกสารปัจจุบัน
+ตอนนี้ยังไม่ได้ฝังซับลงภาพและไม่ได้เชื่อมกับหน้าเว็บ

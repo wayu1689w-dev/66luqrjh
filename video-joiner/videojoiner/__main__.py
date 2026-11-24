@@ -13,16 +13,21 @@ def main():
     ap.add_argument("--crossfade", type=float, default=0.0, help="วินาที ที่เฟดซ้อนระหว่างคลิป")
     ap.add_argument("--music", help="ไฟล์เพลงพื้นหลัง (วนซ้ำ/ตัดให้พอดี)")
     ap.add_argument("--music-volume", type=float, default=0.25)
+    ap.add_argument("--voiceover", help="ไฟล์เสียงพากย์ (เช่นจาก videojoiner.gemini speak) เล่นครั้งเดียว ความดังเต็ม")
     a = ap.parse_args()
     w, h = map(int, a.size.lower().split("x"))
+    if a.voiceover and a.music:
+        raise SystemExit("error: ใช้ --voiceover กับ --music พร้อมกันยังไม่รองรับ")
 
     def show(p):
         print(f"\r{p:6.1%}", end="", file=sys.stderr, flush=True)
 
     try:
         out = join_videos(a.clips, a.output, progress=show, width=w, height=h, fps=a.fps,
-                          mute=a.mute, crossfade=a.crossfade, music=a.music,
-                          music_volume=a.music_volume)
+                          mute=a.mute, crossfade=a.crossfade,
+                          music=a.voiceover or a.music,
+                          music_volume=1.0 if a.voiceover else a.music_volume,
+                          music_loop=not a.voiceover)
     except JoinError as e:
         raise SystemExit(f"\nerror: {e}")
     print(f"\nสำเร็จ -> {out}")
