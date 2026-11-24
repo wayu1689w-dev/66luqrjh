@@ -3,6 +3,7 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:   # กดรันเองได้ทุกเมื่อที่แท็บ Actions > CI > Run workflow
 
 permissions:
   contents: read
