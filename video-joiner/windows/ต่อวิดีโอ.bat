@@ -16,7 +16,8 @@ $Base = Join-Path $env:LOCALAPPDATA "video-joiner"
 $Code = Join-Path $Base "66luqrjh-main\video-joiner"
 $Zip  = "https://github.com/wayu1689w-dev/66luqrjh/archive/refs/heads/main.zip"
 $Exts = @(".mp4", ".mov", ".m4v", ".mkv", ".avi")
-$Channels = @("เสือ2992", "เสือ954", "ชีวิตติดรีวิวของดี", "เจ้าเสือ")  # แก้ชื่อช่องได้ที่นี่
+$Channels = @("เสือ2992", "เสือ954", "ชีวิตติดรีวิวของดี", "เจ้าเสือ")  # แก้ชื่อช่องได้ที่นี่ (ใช้เป็นชื่อโฟลเดอร์/ไฟล์)
+$Handles  = @("@www.dada198", "@ok_d198", "@198da_d", "@www.wayu1989")
 
 function Say($msg) { Write-Host $msg }
 function Stop-With($msg) { Write-Host ""; Write-Host "ผิดพลาด: $msg" -ForegroundColor Red; exit 1 }
@@ -72,7 +73,7 @@ if (-not $py) { Stop-With "ยังหา Python ไม่เจอ ให้�
 # 4) เลือกช่อง -> ตั้งชื่อไฟล์ + โฟลเดอร์ตามช่อง
 Say ""
 Say "คลิปนี้สำหรับช่องไหน?"
-for ($n = 0; $n -lt $Channels.Count; $n++) { Say ("  {0} = {1}" -f ($n + 1), $Channels[$n]) }
+for ($n = 0; $n -lt $Channels.Count; $n++) { Say ("  {0} = {1}  {2}" -f ($n + 1), $Channels[$n], $Handles[$n]) }
 do {
     $pick = (Read-Host "พิมพ์เลข 1-$($Channels.Count) แล้วกด Enter").Trim()
 } until ($pick -match '^\d+$' -and [int]$pick -ge 1 -and [int]$pick -le $Channels.Count)
