@@ -1,29 +1,36 @@
 ---
 name: join-videos
-description: Join several video clips into one mp4 while keeping audio (silent clips get silence, mixed sample rates fixed). Supports crossfade, background music, voice-over, and Gemini-generated subtitles/TTS. Use when the user wants to stitch/merge/concatenate videos, or asks for subtitles or a voice-over for a video.
+description: ต่อคลิปวิดีโอหลายอันเป็น mp4 ไฟล์เดียวโดยเสียงไม่หาย (คลิปไม่มีเสียงได้เสียงเงียบแทน, แก้ sample rate ไม่ตรงกัน) ใส่ crossfade เพลงพื้นหลัง เสียงพากย์ และซับไตเติลจาก Gemini ได้ ใช้เมื่อผู้ใช้อยากต่อ/รวม/ตัดต่อวิดีโอ หรือขอซับไตเติลหรือเสียงพากย์ให้วิดีโอ (join, merge, stitch, concatenate videos, subtitles, voice-over)
 ---
 
-Run from the plugin root: `cd "${CLAUDE_PLUGIN_ROOT}"` (needs `ffmpeg` >= 5.1 and Python 3.9+).
+**ตอบผู้ใช้เป็นภาษาไทยเสมอ** ใช้คำง่าย ๆ ผู้ใช้อ่านภาษาอังกฤษไม่ถนัด
+ถ้าคำสั่งแสดงข้อความภาษาอังกฤษ (เช่น error จาก ffmpeg) ให้แปลและอธิบายเป็นภาษาไทย
 
-## Join clips
+รันจากรากของปลั๊กอิน: `cd "${CLAUDE_PLUGIN_ROOT}"` (ต้องมี `ffmpeg` 5.1 ขึ้นไป และ Python 3.9 ขึ้นไป)
+ถ้าไม่มี ffmpeg หรือ Python ให้บอกผู้ใช้เป็นภาษาไทยว่าต้องติดตั้งอะไร และขออนุญาตก่อนติดตั้ง
+
+## ต่อคลิป
 `python3 -m videojoiner a.mp4 b.mp4 -o joined.mp4`
 
-Options: `--crossfade 0.5` (clips must be >= 2x as long), `--music bg.mp3 --music-volume 0.25`,
-`--voiceover voice.wav` (plays once; cannot combine with `--music`), `--size 1080x1920`, `--fps 30`, `--mute`.
-Paths are relative to the plugin root, so pass absolute paths for the user's files.
-The tool fails loudly if the result has no audio track; report that error, do not hide it.
+ตัวเลือก:
+- `--crossfade 0.5` เฟดซ้อนระหว่างคลิป (คลิปต้องยาวอย่างน้อย 2 เท่าของเวลานี้)
+- `--music bg.mp3 --music-volume 0.25` เพลงพื้นหลัง วนซ้ำถ้าสั้น
+- `--voiceover voice.wav` เสียงพากย์ เล่นครั้งเดียว (ใช้พร้อม `--music` ไม่ได้)
+- `--size 1080x1920` (แนวตั้งสำหรับ TikTok) `--fps 30` `--mute`
 
-## Gemini helpers (optional)
-Need `GEMINI_API_KEY` from Google AI Studio in the environment. Never ask the user to paste the key
-in chat and never print it.
+ใช้ path แบบเต็มสำหรับไฟล์ของผู้ใช้ เพราะคำสั่งรันจากรากของปลั๊กอิน
+ถ้าไฟล์ผลลัพธ์ไม่มีเสียง เครื่องมือจะแจ้ง error ให้รายงานผู้ใช้ตรง ๆ อย่าซ่อน
 
-- Subtitles: `python3 -m videojoiner.gemini subs joined.mp4 -o subs.srt --lang th`
-- Voice-over: `python3 -m videojoiner.gemini speak script.txt -o voice.wav`
+## Gemini (ไม่บังคับ)
+ต้องมี `GEMINI_API_KEY` จาก Google AI Studio ใน environment
+ห้ามขอให้ผู้ใช้วาง key ในแชท และห้ามพิมพ์ key ออกมา
 
-Model names are env-configurable (`GEMINI_STT_MODEL`, `GEMINI_TTS_MODEL`, `GEMINI_VOICE`) and the defaults
-are unverified guesses. These calls have only been tested against mocked responses, so say so if one fails
-and check the current Gemini docs for model names.
+- ซับไตเติล: `python3 -m videojoiner.gemini subs joined.mp4 -o subs.srt --lang th`
+- เสียงพากย์: `python3 -m videojoiner.gemini speak script.txt -o voice.wav`
 
-## Browser UI
-`python3 -m videojoiner.web` serves http://localhost:8000 (drag-reorder, crossfade, music, progress).
-Local use only: no auth.
+ชื่อโมเดลตั้งได้ที่ `GEMINI_STT_MODEL`, `GEMINI_TTS_MODEL`, `GEMINI_VOICE` ค่าเริ่มต้นยังไม่ได้ยืนยัน
+ส่วนนี้ทดสอบกับคำตอบจำลองเท่านั้น ถ้าล้มเหลวให้บอกผู้ใช้ตรง ๆ
+
+## หน้าเว็บ
+`python3 -m videojoiner.web` เปิด http://localhost:8000 (ลากสลับลำดับ, crossfade, เพลง, แถบความคืบหน้า)
+ใช้บนเครื่องตัวเองเท่านั้น ไม่มีระบบล็อกอิน

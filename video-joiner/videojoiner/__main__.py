@@ -17,7 +17,7 @@ def main():
     a = ap.parse_args()
     w, h = map(int, a.size.lower().split("x"))
     if a.voiceover and a.music:
-        raise SystemExit("error: ใช้ --voiceover กับ --music พร้อมกันยังไม่รองรับ")
+        raise SystemExit("ผิดพลาด: ใช้ --voiceover กับ --music พร้อมกันยังไม่รองรับ")
 
     def show(p):
         print(f"\r{p:6.1%}", end="", file=sys.stderr, flush=True)
@@ -29,7 +29,7 @@ def main():
                           music_volume=1.0 if a.voiceover else a.music_volume,
                           music_loop=not a.voiceover)
     except JoinError as e:
-        raise SystemExit(f"\nerror: {e}")
+        raise SystemExit(f"\nผิดพลาด: {e}")
     print(f"\nสำเร็จ -> {out}")
 
 
