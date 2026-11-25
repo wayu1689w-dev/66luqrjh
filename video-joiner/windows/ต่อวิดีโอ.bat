@@ -16,7 +16,7 @@ $Base = Join-Path $env:LOCALAPPDATA "video-joiner"
 $Code = Join-Path $Base "66luqrjh-main\video-joiner"
 $Zip  = "https://github.com/wayu1689w-dev/66luqrjh/archive/refs/heads/main.zip"
 $Exts = @(".mp4", ".mov", ".m4v", ".mkv", ".avi")
-$Out  = Join-Path $Folder "joined.mp4"
+$Channels = @("เสือ2992", "เสือ954", "ชีวิตติดรีวิวของดี", "เจ้าเสือ")  # แก้ชื่อช่องได้ที่นี่
 
 function Say($msg) { Write-Host $msg }
 function Stop-With($msg) { Write-Host ""; Write-Host "ผิดพลาด: $msg" -ForegroundColor Red; exit 1 }
@@ -69,7 +69,20 @@ if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) { Stop-With "ยั
 $py = Find-Python
 if (-not $py) { Stop-With "ยังหา Python ไม่เจอ ให้ปิดหน้าต่างนี้แล้วดับเบิลคลิกไฟล์อีกครั้ง ถ้ายังไม่ได้ให้รีสตาร์ทเครื่อง" }
 
-# 4) ต่อวิดีโอ
+# 4) เลือกช่อง -> ตั้งชื่อไฟล์ + โฟลเดอร์ตามช่อง
+Say ""
+Say "คลิปนี้สำหรับช่องไหน?"
+for ($n = 0; $n -lt $Channels.Count; $n++) { Say ("  {0} = {1}" -f ($n + 1), $Channels[$n]) }
+do {
+    $pick = (Read-Host "พิมพ์เลข 1-$($Channels.Count) แล้วกด Enter").Trim()
+} until ($pick -match '^\d+$' -and [int]$pick -ge 1 -and [int]$pick -le $Channels.Count)
+$Channel = $Channels[[int]$pick - 1]
+$OutDir = Join-Path $Folder $Channel
+New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+$Out = Join-Path $OutDir ("{0}_{1}.mp4" -f $Channel, (Get-Date -Format "yyyy-MM-dd_HHmm"))
+Say "จะบันทึกเป็น: $Out"
+
+# 5) ต่อวิดีโอ
 Say ""
 Say "กำลังต่อวิดีโอ (แนวตั้ง 1080x1920)..."
 $env:PYTHONPATH = $Code
