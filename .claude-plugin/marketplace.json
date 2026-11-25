@@ -1,11 +1,13 @@
 {
   "name": "66luqrjh",
-  "owner": { "name": "wayu1689w-dev" },
+  "owner": {
+    "name": "wayu1689w-dev"
+  },
   "plugins": [
     {
       "name": "video-joiner",
       "source": "./video-joiner",
-      "description": "Join video clips with ffmpeg without losing audio; optional Gemini subtitles and voice-over."
+      "description": "ต่อคลิปวิดีโอด้วย ffmpeg โดยเสียงไม่หาย มีซับไตเติลและเสียงพากย์จาก Gemini (ไม่บังคับ)"
     }
   ]
 }

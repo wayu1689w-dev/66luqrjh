@@ -36,5 +36,5 @@
 ## ติดตั้งเป็นปลั๊กอิน Claude Code
     /plugin install video-joiner --marketplace wayu1689w-dev/66luqrjh   # Claude Code 2.1.275+
 
-จากนั้นสั่ง Claude ว่า "ต่อวิดีโอเหล่านี้" สกิล `join-videos` จะทำงานให้ (ต้องมี ffmpeg)
+จากนั้นสั่ง Claude ว่า "ต่อวิดีโอเหล่านี้" สกิล `join-videos` จะตรวจว่าเครื่องมี ffmpeg และ Python ไหม ถ้าไม่มีจะติดตั้งให้เอง (`scripts/setup.ps1` บน Windows, `scripts/setup.sh` บน macOS/Linux) คุณแค่กดอนุญาตเมื่อมีหน้าต่างถาม
 ถ้าจะใช้ Gemini ให้ตั้ง `GEMINI_API_KEY` จาก Google AI Studio ใน environment

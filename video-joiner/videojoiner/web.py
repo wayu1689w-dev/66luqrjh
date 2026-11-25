@@ -123,16 +123,16 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, PAGE)
         job = JOBS.get(parts[1]) if len(parts) > 1 and parts[0] == "jobs" else None
         if job is None:
-            return self._json(404, {"error": "not found"})
+            return self._json(404, {"error": "ไม่พบ"})
         if len(parts) == 2:
             return self._json(200, {k: job.get(k) for k in ("status", "progress", "error")})
         if len(parts) == 3 and parts[2] == "result" and job["status"] == "done":
             return self._send(200, Path(job["file"]).read_bytes(), "video/mp4")
-        self._json(404, {"error": "not found"})
+        self._json(404, {"error": "ไม่พบ"})
 
     def do_POST(self):
         if self.path != "/jobs":
-            return self._json(404, {"error": "not found"})
+            return self._json(404, {"error": "ไม่พบ"})
         body = self.rfile.read(int(self.headers.get("Content-Length", 0)))
         msg = message_from_bytes(
             b"Content-Type: " + self.headers["Content-Type"].encode() + b"\r\n\r\n" + body,
@@ -169,5 +169,5 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print("http://localhost:8000")
+    print("เปิดเบราว์เซอร์ที่ http://localhost:8000 (กด Ctrl+C เพื่อปิด)")
     ThreadingHTTPServer(("", 8000), Handler).serve_forever()

@@ -1,6 +1,17 @@
 {
   "name": "video-joiner",
-  "version": "0.1.0",
-  "description": "Join video clips with ffmpeg without losing audio; optional Gemini (Google AI Studio key) subtitles and voice-over.",
-  "keywords": ["video", "ffmpeg", "audio", "gemini", "subtitles", "tts"]
+  "version": "0.1.2",
+  "description": "ต่อคลิปวิดีโอหลายอันเป็นไฟล์เดียวด้วย ffmpeg โดยเสียงไม่หาย มีซับไตเติลและเสียงพากย์จาก Gemini (ไม่บังคับ)",
+  "keywords": [
+    "video",
+    "ffmpeg",
+    "audio",
+    "gemini",
+    "subtitles",
+    "tts",
+    "ต่อวิดีโอ",
+    "ตัดต่อคลิป",
+    "ซับไตเติล",
+    "เสียงพากย์"
+  ]
 }

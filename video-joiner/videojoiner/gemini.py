@@ -124,4 +124,4 @@ if __name__ == "__main__":
             txt = Path(a.text).read_text(encoding="utf-8") if Path(a.text).is_file() else a.text
             print(synthesize_speech(txt, a.output))
     except GeminiError as e:
-        raise SystemExit(f"error: {e}")
+        raise SystemExit(f"ผิดพลาด: {e}")
