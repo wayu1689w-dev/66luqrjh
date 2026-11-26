@@ -633,6 +633,15 @@ from plugin_os.plugin_catalog_extended import (
     CANVA_EXTENDED,
     EXTENDED_PLUGINS,
 )
+from plugin_os.plugin_catalog_wave2 import (
+    COPILOT,
+    OPENAI_EXTENDED,
+    LLM_AGENT_BUILDER,
+    CONTENT_AI,
+    ECOMMERCE_AI,
+    OFFICE_AI,
+    WAVE2_PLUGINS,
+)
 
 # ═══════════════════════════════════════════════════════════
 # AGGREGATOR
@@ -647,6 +656,7 @@ ALL_PLUGINS = (
     + TIKTOK_PLUGINS
     + SECURITY
     + EXTENDED_PLUGINS
+    + WAVE2_PLUGINS
 )
 
 CATEGORIES = {
@@ -662,6 +672,12 @@ CATEGORIES = {
     "meta_ai": META_AI,
     "claude_ext": CLAUDE_EXTENDED,
     "canva_ext": CANVA_EXTENDED,
+    "copilot": COPILOT,
+    "openai_ext": OPENAI_EXTENDED,
+    "llm_agent": LLM_AGENT_BUILDER,
+    "content_ai": CONTENT_AI,
+    "ecommerce_ai": ECOMMERCE_AI,
+    "office_ai": OFFICE_AI,
 }
 
 

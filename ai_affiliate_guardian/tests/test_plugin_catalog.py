@@ -1,4 +1,4 @@
-"""Tests for Plugin Catalog — 1000+ plugins, 12 categories, all DISABLED"""
+"""Tests for Plugin Catalog — 1500+ plugins, 18 categories, all DISABLED"""
 import unittest
 import sys, os
 
@@ -18,6 +18,12 @@ from plugin_os.plugin_catalog import (
     META_AI,
     CLAUDE_EXTENDED,
     CANVA_EXTENDED,
+    COPILOT,
+    OPENAI_EXTENDED,
+    LLM_AGENT_BUILDER,
+    CONTENT_AI,
+    ECOMMERCE_AI,
+    OFFICE_AI,
     get_total_count,
     get_category_counts,
     get_by_provider,
@@ -30,11 +36,11 @@ from plugin_os.plugin_catalog import (
 
 
 class TestCatalogSize(unittest.TestCase):
-    def test_total_at_least_1000(self):
-        self.assertGreaterEqual(get_total_count(), 1000)
+    def test_total_at_least_1500(self):
+        self.assertGreaterEqual(get_total_count(), 1500)
 
-    def test_twelve_categories(self):
-        self.assertEqual(len(CATEGORIES), 12)
+    def test_eighteen_categories(self):
+        self.assertEqual(len(CATEGORIES), 18)
 
     def test_ai_dev_at_least_100(self):
         self.assertGreaterEqual(len(AI_DEVELOPMENT), 100)
@@ -71,6 +77,24 @@ class TestCatalogSize(unittest.TestCase):
 
     def test_canva_extended_at_least_50(self):
         self.assertGreaterEqual(len(CANVA_EXTENDED), 50)
+
+    def test_copilot_at_least_100(self):
+        self.assertGreaterEqual(len(COPILOT), 100)
+
+    def test_openai_extended_at_least_100(self):
+        self.assertGreaterEqual(len(OPENAI_EXTENDED), 100)
+
+    def test_llm_agent_at_least_100(self):
+        self.assertGreaterEqual(len(LLM_AGENT_BUILDER), 100)
+
+    def test_content_ai_at_least_50(self):
+        self.assertGreaterEqual(len(CONTENT_AI), 50)
+
+    def test_ecommerce_ai_at_least_50(self):
+        self.assertGreaterEqual(len(ECOMMERCE_AI), 50)
+
+    def test_office_ai_at_least_50(self):
+        self.assertGreaterEqual(len(OFFICE_AI), 50)
 
 
 class TestAllDisabled(unittest.TestCase):
@@ -300,8 +324,87 @@ class TestCategoryMapping(unittest.TestCase):
     def test_category_keys_valid(self):
         expected = {"ai_dev", "content", "ecommerce", "documents",
                     "data", "control", "tiktok", "security",
-                    "ai_studio", "meta_ai", "claude_ext", "canva_ext"}
+                    "ai_studio", "meta_ai", "claude_ext", "canva_ext",
+                    "copilot", "openai_ext", "llm_agent",
+                    "content_ai", "ecommerce_ai", "office_ai"}
         self.assertEqual(set(CATEGORIES.keys()), expected)
+
+
+class TestWave2Coverage(unittest.TestCase):
+    def test_copilot_provider(self):
+        ms = [p for p in COPILOT if p["provider"] == "microsoft_copilot"]
+        self.assertGreaterEqual(len(ms), 80)
+
+    def test_github_copilot_provider(self):
+        gh = [p for p in COPILOT if p["provider"] == "github_copilot"]
+        self.assertGreaterEqual(len(gh), 10)
+
+    def test_openai_ext_provider(self):
+        oi = [p for p in OPENAI_EXTENDED if p["provider"] == "openai"]
+        self.assertGreaterEqual(len(oi), 90)
+
+    def test_llm_agent_multi_provider(self):
+        providers = {p["provider"] for p in LLM_AGENT_BUILDER}
+        self.assertGreaterEqual(len(providers), 15)
+
+    def test_wave2_all_disabled(self):
+        from plugin_os.plugin_catalog_wave2 import WAVE2_PLUGINS
+        for p in WAVE2_PLUGINS:
+            self.assertFalse(p["connected"])
+            self.assertFalse(p["authorized"])
+            self.assertEqual(p["state"], "DISCOVERED")
+
+    def test_wave2_r5_requires_approval(self):
+        from plugin_os.plugin_catalog_wave2 import WAVE2_PLUGINS
+        r5 = [p for p in WAVE2_PLUGINS if p["risk"] == "R5"]
+        self.assertGreater(len(r5), 0)
+        for p in r5:
+            self.assertTrue(p["approval_required"],
+                            f"R5 wave2 plugin {p['name']} must require approval")
+
+    def test_wave2_unique_ids(self):
+        from plugin_os.plugin_catalog_wave2 import WAVE2_PLUGINS
+        ids = [p["id"] for p in WAVE2_PLUGINS]
+        self.assertEqual(len(ids), len(set(ids)))
+
+    def test_no_wave2_id_collision(self):
+        from plugin_os.plugin_catalog_wave2 import WAVE2_PLUGINS
+        from plugin_os.plugin_catalog_extended import EXTENDED_PLUGINS
+        base_ids = set()
+        for cat_key in ["ai_dev", "content", "ecommerce", "documents",
+                        "data", "control", "tiktok", "security"]:
+            for p in CATEGORIES[cat_key]:
+                base_ids.add(p["id"])
+        ext_ids = {p["id"] for p in EXTENDED_PLUGINS}
+        w2_ids = {p["id"] for p in WAVE2_PLUGINS}
+        self.assertEqual(len(base_ids & w2_ids), 0, "Wave2 collides with base")
+        self.assertEqual(len(ext_ids & w2_ids), 0, "Wave2 collides with extended")
+
+    def test_search_copilot(self):
+        results = search_plugins("copilot")
+        self.assertGreater(len(results), 20)
+
+    def test_search_langchain(self):
+        results = search_plugins("langchain")
+        self.assertGreater(len(results), 5)
+
+    def test_search_shopify(self):
+        results = search_plugins("shopify")
+        self.assertGreater(len(results), 3)
+
+    def test_email_send_approval(self):
+        from plugin_os.plugin_catalog_wave2 import WAVE2_PLUGINS
+        email = [p for p in WAVE2_PLUGINS if "email_draft" in p["tools"]
+                 and p["risk"] in ("R4", "R5")]
+        for p in email:
+            self.assertTrue(p["approval_required"],
+                            f"{p['name']} email R4+ must need approval")
+
+    def test_admin_r5(self):
+        from plugin_os.plugin_catalog_wave2 import WAVE2_PLUGINS
+        admin = [p for p in WAVE2_PLUGINS if p["risk"] == "R5"]
+        for p in admin:
+            self.assertTrue(p["approval_required"])
 
 
 if __name__ == "__main__":
