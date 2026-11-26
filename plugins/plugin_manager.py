@@ -7,11 +7,16 @@ PLUGINS = [
     "ChatGPT Ads Manager", "GeminiLaunch",
     "GitHub Copilot", "Cursor", "DeepSeek",
     "Gemini AI", "Google AI Studio", "GrokBot",
-    "Meta AI", "ChatGPT Work", "Claude"
+    "Meta AI", "ChatGPT Work", "Claude",
+    "OpusClip AI Producer", "TikTok for Business",
+    "Supermetrics", "Microsoft 365",
+    "AdWhispr Ads", "Google Docs",
+    "Google Sheets", "Google Slides",
+    "Airtable", "Shopify",
 ]
 
 
 def run_all(task):
     for p in PLUGINS:
         print(f"@{p} พร้อมทำงานร่วม: {task}")
-    return "ทั้งหมด 27 ปลั๊กอิน พร้อมทำงานร่วม"
+    return f"ทั้งหมด {len(PLUGINS)} ปลั๊กอิน พร้อมทำงานร่วม"
