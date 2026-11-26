@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AI Office เสือ</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* -- tokens -- */
+:root {
+  /* compact dashboard: dark base, amber accent for TikTok energy */
+  --bg: #f6f5f0;
+  --bg2: #fff;
+  --fg: #1a1a1a;
+  --fg2: #555;
+  --accent: #e8590c;
+  --accent2: #d9480f;
+  --green: #2b8a3e;
+  --yellow: #e67700;
+  --red: #c92a2a;
+  --blue: #1971c2;
+  --border: #ddd;
+  --card-shadow: 0 1px 3px rgba(0,0,0,.08);
+  --radius: 10px;
+  font-family: 'IBM Plex Sans Thai', sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111;
+    --bg2: #1a1a1a;
+    --fg: #e8e6e1;
+    --fg2: #999;
+    --accent: #ff6b35;
+    --accent2: #ff8c5a;
+    --green: #51cf66;
+    --yellow: #fcc419;
+    --red: #ff6b6b;
+    --blue: #74c0fc;
+    --border: #333;
+    --card-shadow: 0 1px 3px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111;
+  --bg2: #1a1a1a;
+  --fg: #e8e6e1;
+  --fg2: #999;
+  --accent: #ff6b35;
+  --accent2: #ff8c5a;
+  --green: #51cf66;
+  --yellow: #fcc419;
+  --red: #ff6b6b;
+  --blue: #74c0fc;
+  --border: #333;
+  --card-shadow: 0 1px 3px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; background: var(--bg); color: var(--fg); }
+body { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); overflow-y: auto; }
+
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+.header .badge { background: var(--accent); color: #fff; font-size: .7rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+.header .time { margin-left: auto; font-size: .8rem; color: var(--fg2); font-family: 'JetBrains Mono', monospace; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 20px; }
+@media (max-width: 400px) { .grid { grid-template-columns: 1fr; } }
+
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--card-shadow); }
+.card h2 { font-size: .85rem; font-weight: 600; color: var(--fg2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.card h2 .icon { font-size: 1rem; }
+
+/* AI team tiles */
+.ai-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+@media (max-width: 500px) { .ai-row { grid-template-columns: repeat(2, 1fr); } }
+.ai-tile { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 10px; text-align: center; position: relative; }
+.ai-tile .dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 8px; right: 8px; }
+.ai-tile .name { font-weight: 600; font-size: .85rem; margin-bottom: 2px; }
+.ai-tile .role { font-size: .7rem; color: var(--fg2); }
+.dot-green { background: var(--green); }
+.dot-yellow { background: var(--yellow); }
+.dot-blue { background: var(--blue); }
+
+/* schedule table */
+.sched-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+.sched-table th { text-align: left; font-weight: 500; color: var(--fg2); padding: 4px 6px; border-bottom: 1px solid var(--border); font-size: .7rem; text-transform: uppercase; }
+.sched-table td { padding: 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.sched-table tr:last-child td { border-bottom: none; }
+.status { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: .68rem; font-weight: 600; }
+.s-ok { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+.s-fail { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); }
+.s-off { background: color-mix(in srgb, var(--fg2) 15%, transparent); color: var(--fg2); }
+.s-fix { background: color-mix(in srgb, var(--yellow) 15%, transparent); color: var(--yellow); }
+.model-tag { font-family: 'JetBrains Mono', monospace; font-size: .65rem; color: var(--fg2); }
+
+/* channels */
+.ch-list { list-style: none; }
+.ch-list li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: .82rem; }
+.ch-list li:last-child { border-bottom: none; }
+.ch-focus { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-size: .65rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+.ch-handle { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--fg2); }
+
+/* plugins */
+.plug-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.plug { font-size: .72rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); font-weight: 500; }
+.plug.active { border-color: var(--green); color: var(--green); }
+
+/* pending */
+.pend-list { list-style: none; }
+.pend-list li { font-size: .8rem; padding: 5px 0; border-bottom: 1px solid var(--border); display: flex; gap: 6px; }
+.pend-list li:last-child { border-bottom: none; }
+.pend-list .check { width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.pend-list .check.done { background: var(--green); border-color: var(--green); }
+.pend-list .check.done::after { content: '✓'; color: #fff; font-size: .65rem; font-weight: 700; }
+
+/* notion links */
+.notion-links { display: flex; flex-direction: column; gap: 4px; }
+.notion-links a { font-size: .78rem; color: var(--blue); text-decoration: none; padding: 4px 0; border-bottom: 1px solid var(--border); }
+.notion-links a:hover { text-decoration: underline; }
+.notion-links a:last-child { border-bottom: none; }
+.nid { font-family: 'JetBrains Mono', monospace; font-size: .62rem; color: var(--fg2); margin-left: 4px; }
+
+.footer { text-align: center; font-size: .7rem; color: var(--fg2); padding: 16px 0 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>AI Office เสือ</h1>
+  <span class="badge">LIVE</span>
+  <span class="time" id="clock"></span>
+</div>
+
+<!-- AI Team -->
+<div class="ai-row">
+  <div class="ai-tile">
+    <div class="dot dot-green"></div>
+    <div class="name">Claude</div>
+    <div class="role">7 งานอัตโนมัติ</div>
+  </div>
+  <div class="ai-tile">
+    <div class="dot dot-green"></div>
+    <div class="name">ChatGPT</div>
+    <div class="role">วางแผน สั่งการ</div>
+  </div>
+  <div class="ai-tile">
+    <div class="dot dot-yellow"></div>
+    <div class="name">Gemini</div>
+    <div class="role">AI Studio</div>
+  </div>
+  <div class="ai-tile">
+    <div class="dot dot-blue"></div>
+    <div class="name">Notion</div>
+    <div class="role">ศูนย์ข้อมูล</div>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- Scheduled Tasks -->
+  <div class="card" style="grid-column: 1 / -1;">
+    <h2><span class="icon">⏱</span> งานตั้งเวลา</h2>
+    <div style="overflow-x: auto;">
+    <table class="sched-table">
+      <thead><tr><th>เวลา</th><th>ชื่อ</th><th>โมเดล</th><th>สถานะ</th></tr></thead>
+      <tbody>
+        <tr><td>00:00</td><td>AI Office code</td><td><span class="model-tag">Sonnet</span></td><td><span class="status s-ok">OK</span></td></tr>
+        <tr><td>01:00</td><td>ตรวจ ACK ใน Notion</td><td><span class="model-tag">Haiku</span></td><td><span class="status s-fix">แก้แล้ว</span></td></tr>
+        <tr><td>05:38</td><td>รายงาน TikTok รวม</td><td><span class="model-tag">Haiku</span></td><td><span class="status s-ok">OK</span></td></tr>
+        <tr><td>05:42</td><td>Daily TikTok data</td><td><span class="model-tag">Haiku</span></td><td><span class="status s-off">ปิด</span></td></tr>
+        <tr><td>06:00</td><td>สรุปปลั๊กอินรายวัน</td><td><span class="model-tag">Haiku</span></td><td><span class="status s-ok">OK</span></td></tr>
+        <tr><td>08:23</td><td>เฝ้าโฆษณา+ออเดอร์</td><td><span class="model-tag">Haiku</span></td><td><span class="status s-ok">OK</span></td></tr>
+        <tr><td>21:43</td><td>อัปเดตคลิปเจ้าเสือ</td><td><span class="model-tag">Haiku</span></td><td><span class="status s-ok">OK</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- TikTok Channels -->
+  <div class="card">
+    <h2><span class="icon">📺</span> ช่อง TikTok (4)</h2>
+    <ul class="ch-list">
+      <li>
+        <span>เจ้าเสือ</span>
+        <span class="ch-focus">โฟกัส · ขนม</span>
+        <span class="ch-handle">@www.wayu1989</span>
+      </li>
+      <li>
+        <span>เสือ2992</span>
+        <span class="ch-focus">โฟกัส · อาหาร</span>
+        <span class="ch-handle">@www.dada198</span>
+      </li>
+      <li>
+        <span>เสือ 945</span>
+        <span class="ch-handle">@ok_d198</span>
+      </li>
+      <li>
+        <span>ชีวิตติด รีวิวของดี</span>
+        <span class="ch-handle">@198da_d</span>
+      </li>
+    </ul>
+    <div style="margin-top:8px; font-size:.72rem; color:var(--fg2);">เสือ = Affiliate (นายหน้า) ขายของร้านอื่น</div>
+  </div>
+
+  <!-- Plugins -->
+  <div class="card">
+    <h2><span class="icon">🔌</span> ปลั๊กอินที่เชื่อม</h2>
+    <div class="plug-grid">
+      <span class="plug active">Windsor.ai</span>
+      <span class="plug active">TikTok Biz</span>
+      <span class="plug active">Metricool</span>
+      <span class="plug active">AfterShip</span>
+      <span class="plug active">AdWhispr</span>
+      <span class="plug active">Canva</span>
+      <span class="plug active">OpusClip</span>
+      <span class="plug active">Google Drive</span>
+      <span class="plug active">Gmail</span>
+      <span class="plug active">G Calendar</span>
+      <span class="plug active">Dropbox</span>
+      <span class="plug active">Figma</span>
+      <span class="plug active">MS 365</span>
+      <span class="plug active">vidIQ</span>
+      <span class="plug active">Supermetrics</span>
+      <span class="plug active">Shopify</span>
+    </div>
+    <div style="margin-top:10px; font-size:.7rem; color:var(--fg2);">Windsor Trial 30 วัน · vidIQ ห้ามใช้เครดิต</div>
+  </div>
+
+  <!-- Notion Pages -->
+  <div class="card">
+    <h2><span class="icon">📑</span> หน้า Notion สำคัญ</h2>
+    <div class="notion-links">
+      <a href="#">ศูนย์กลาง (Hub) <span class="nid">421cfb03…258f</span></a>
+      <a href="#">AI Office Control Center <span class="nid">423cfb03…6ac3</span></a>
+      <a href="#">ทะเบียนปลั๊กอิน + ACK <span class="nid">423cfb03…0ce7</span></a>
+      <a href="#">Pending Decisions <span class="nid">423cfb03…b4c4</span></a>
+      <a href="#">API Registry <span class="nid">424cfb03…4c0f</span></a>
+      <a href="#">GMV Max + Product <span class="nid">423cfb03…7e50</span></a>
+      <a href="#">เกณฑ์ให้คะแนนสินค้า <span class="nid">423cfb03…0737</span></a>
+      <a href="#">Handoff → ChatGPT Work <span class="nid">424cfb03…d13b</span></a>
+      <a href="#">Gemini Status <span class="nid">424cfb03…ab2b</span></a>
+    </div>
+  </div>
+
+  <!-- Pending -->
+  <div class="card">
+    <h2><span class="icon">📋</span> งานค้าง (รอเสือตัดสินใจ)</h2>
+    <ul class="pend-list" id="pending">
+      <li><div class="check" onclick="toggle(this)"></div><span>รวม video-joiner เข้า main</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>แผนคอนเทนต์ 7 วัน 4 ช่อง</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>ล็อกอิน Facebook Windsor ใหม่</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>ใส่ Gemini API key</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>ยืนยัน "เสือ954" = "เสือ 945"</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>แคป Kalodata/FastMoss ตารางสินค้า</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>Connect: Malwarebytes, Blockscout, WordPress</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>TikTok Shop invitation → AfterShip</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>ACK: CMD-20261126-CLAUDE-AIO-008</span></li>
+    </ul>
+  </div>
+
+  <!-- Scoring -->
+  <div class="card">
+    <h2><span class="icon">🏆</span> เกณฑ์สินค้า Affiliate (10 คะแนน)</h2>
+    <div style="display:flex; flex-direction:column; gap:4px; font-size:.8rem;">
+      <div style="display:flex; justify-content:space-between;"><span>มีแอดวิ่งอยู่</span><strong>3</strong></div>
+      <div style="display:flex; justify-content:space-between;"><span>ยอดขายเติบโต</span><strong>2</strong></div>
+      <div style="display:flex; justify-content:space-between;"><span>คู่แข่งน้อย</span><strong>2</strong></div>
+      <div style="display:flex; justify-content:space-between;"><span>คอมมิชชันดี</span><strong>2</strong></div>
+      <div style="display:flex; justify-content:space-between;"><span>เรตติ้งร้านดี</span><strong>1</strong></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  AI Office เสือ · Claude + ChatGPT + Gemini + Notion<br>
+  สร้าง 26 พ.ย. 2569 · ทุกอย่างอยู่ใน Notion
+</div>
+
+<script>
+function updateClock() {
+  const d = new Date();
+  const th = d.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const dd = d.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: 'numeric' });
+  document.getElementById('clock').textContent = dd + ' ' + th;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+function toggle(el) {
+  el.classList.toggle('done');
+  try {
+    const states = [...document.querySelectorAll('.check')].map(c => c.classList.contains('done') ? '1' : '0');
+    localStorage.setItem('pending', states.join(','));
+  } catch(e) {}
+}
+
+try {
+  const saved = localStorage.getItem('pending');
+  if (saved) {
+    const states = saved.split(',');
+    document.querySelectorAll('.check').forEach((c, i) => {
+      if (states[i] === '1') c.classList.add('done');
+    });
+  }
+} catch(e) {}
+</script>
+</body>
+</html>
