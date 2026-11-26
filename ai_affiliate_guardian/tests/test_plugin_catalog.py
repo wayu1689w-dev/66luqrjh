@@ -1,4 +1,4 @@
-"""Tests for Plugin Catalog — 500+ plugins, 8 categories, all DISABLED"""
+"""Tests for Plugin Catalog — 1000+ plugins, 12 categories, all DISABLED"""
 import unittest
 import sys, os
 
@@ -14,6 +14,10 @@ from plugin_os.plugin_catalog import (
     CONTROL_CENTER,
     TIKTOK_PLUGINS,
     SECURITY,
+    GOOGLE_AI_STUDIO,
+    META_AI,
+    CLAUDE_EXTENDED,
+    CANVA_EXTENDED,
     get_total_count,
     get_category_counts,
     get_by_provider,
@@ -26,11 +30,11 @@ from plugin_os.plugin_catalog import (
 
 
 class TestCatalogSize(unittest.TestCase):
-    def test_total_at_least_500(self):
-        self.assertGreaterEqual(get_total_count(), 500)
+    def test_total_at_least_1000(self):
+        self.assertGreaterEqual(get_total_count(), 1000)
 
-    def test_eight_categories(self):
-        self.assertEqual(len(CATEGORIES), 8)
+    def test_twelve_categories(self):
+        self.assertEqual(len(CATEGORIES), 12)
 
     def test_ai_dev_at_least_100(self):
         self.assertGreaterEqual(len(AI_DEVELOPMENT), 100)
@@ -55,6 +59,18 @@ class TestCatalogSize(unittest.TestCase):
 
     def test_security_at_least_50(self):
         self.assertGreaterEqual(len(SECURITY), 50)
+
+    def test_google_ai_studio_at_least_150(self):
+        self.assertGreaterEqual(len(GOOGLE_AI_STUDIO), 150)
+
+    def test_meta_ai_at_least_150(self):
+        self.assertGreaterEqual(len(META_AI), 150)
+
+    def test_claude_extended_at_least_150(self):
+        self.assertGreaterEqual(len(CLAUDE_EXTENDED), 150)
+
+    def test_canva_extended_at_least_50(self):
+        self.assertGreaterEqual(len(CANVA_EXTENDED), 50)
 
 
 class TestAllDisabled(unittest.TestCase):
@@ -169,7 +185,7 @@ class TestApprovalRequired(unittest.TestCase):
 
     def test_ads_budget_needs_approval(self):
         ads = [p for p in ALL_PLUGINS
-               if any(t in p["tools"] for t in ["gmv_campaign", "ad_create", "budget"])]
+               if any(t in p["tools"] for t in ["gmv_campaign", "ad_create", "budget_optimize"])]
         for p in ads:
             self.assertTrue(p["approval_required"],
                             f"{p['name']} ads/budget must need approval")
@@ -177,6 +193,73 @@ class TestApprovalRequired(unittest.TestCase):
     def test_total_approval_count(self):
         approved = get_approval_required()
         self.assertGreater(len(approved), 30, "Too few plugins need approval")
+
+
+class TestExtendedProviderCoverage(unittest.TestCase):
+    def test_google_ai_studio_provider(self):
+        results = get_by_provider("google_ai_studio")
+        self.assertGreaterEqual(len(results), 150)
+
+    def test_meta_ai_provider(self):
+        results = get_by_provider("meta_ai")
+        self.assertGreaterEqual(len(results), 150)
+
+    def test_anthropic_provider(self):
+        results = get_by_provider("anthropic")
+        self.assertGreaterEqual(len(results), 150)
+
+    def test_canva_provider(self):
+        results = get_by_provider("canva")
+        self.assertGreaterEqual(len(results), 50)
+
+    def test_extended_all_disabled(self):
+        from plugin_os.plugin_catalog_extended import EXTENDED_PLUGINS
+        for p in EXTENDED_PLUGINS:
+            self.assertFalse(p["connected"])
+            self.assertFalse(p["authorized"])
+            self.assertEqual(p["state"], "DISCOVERED")
+
+    def test_extended_r5_requires_approval(self):
+        from plugin_os.plugin_catalog_extended import EXTENDED_PLUGINS
+        r5 = [p for p in EXTENDED_PLUGINS if p["risk"] == "R5"]
+        self.assertGreater(len(r5), 0)
+        for p in r5:
+            self.assertTrue(p["approval_required"],
+                            f"R5 extended plugin {p['name']} must require approval")
+
+    def test_extended_unique_ids(self):
+        from plugin_os.plugin_catalog_extended import EXTENDED_PLUGINS
+        ids = [p["id"] for p in EXTENDED_PLUGINS]
+        self.assertEqual(len(ids), len(set(ids)))
+
+    def test_no_id_collision_with_base(self):
+        from plugin_os.plugin_catalog_extended import EXTENDED_PLUGINS
+        base_ids = set()
+        for cat_key in ["ai_dev", "content", "ecommerce", "documents",
+                        "data", "control", "tiktok", "security"]:
+            for p in CATEGORIES[cat_key]:
+                base_ids.add(p["id"])
+        ext_ids = {p["id"] for p in EXTENDED_PLUGINS}
+        collision = base_ids & ext_ids
+        self.assertEqual(len(collision), 0, f"ID collision: {collision}")
+
+    def test_search_gemini(self):
+        results = search_plugins("gemini")
+        self.assertGreater(len(results), 10)
+
+    def test_search_llama(self):
+        results = search_plugins("llama")
+        self.assertGreater(len(results), 5)
+
+    def test_search_canva(self):
+        results = search_plugins("canva")
+        self.assertGreater(len(results), 20)
+
+    def test_meta_ads_r5(self):
+        from plugin_os.plugin_catalog_extended import META_AI
+        ads = [p for p in META_AI if "ad_gen" in p["tools"] or "ad_variation" in p["tools"]]
+        for p in ads:
+            self.assertIn(p["risk"], ("R4", "R5"))
 
 
 class TestSearch(unittest.TestCase):
@@ -216,7 +299,8 @@ class TestCategoryMapping(unittest.TestCase):
 
     def test_category_keys_valid(self):
         expected = {"ai_dev", "content", "ecommerce", "documents",
-                    "data", "control", "tiktok", "security"}
+                    "data", "control", "tiktok", "security",
+                    "ai_studio", "meta_ai", "claude_ext", "canva_ext"}
         self.assertEqual(set(CATEGORIES.keys()), expected)
 
 

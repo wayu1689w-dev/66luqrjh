@@ -624,6 +624,17 @@ SECURITY = [
 
 
 # ═══════════════════════════════════════════════════════════
+# EXTENDED CATALOGS (Google AI Studio 150, Meta AI 150, Claude 150, Canva 50)
+# ═══════════════════════════════════════════════════════════
+from plugin_os.plugin_catalog_extended import (
+    GOOGLE_AI_STUDIO,
+    META_AI,
+    CLAUDE_EXTENDED,
+    CANVA_EXTENDED,
+    EXTENDED_PLUGINS,
+)
+
+# ═══════════════════════════════════════════════════════════
 # AGGREGATOR
 # ═══════════════════════════════════════════════════════════
 ALL_PLUGINS = (
@@ -635,6 +646,7 @@ ALL_PLUGINS = (
     + CONTROL_CENTER
     + TIKTOK_PLUGINS
     + SECURITY
+    + EXTENDED_PLUGINS
 )
 
 CATEGORIES = {
@@ -646,6 +658,10 @@ CATEGORIES = {
     "control": CONTROL_CENTER,
     "tiktok": TIKTOK_PLUGINS,
     "security": SECURITY,
+    "ai_studio": GOOGLE_AI_STUDIO,
+    "meta_ai": META_AI,
+    "claude_ext": CLAUDE_EXTENDED,
+    "canva_ext": CANVA_EXTENDED,
 }
 
 
