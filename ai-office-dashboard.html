@@ -6,125 +6,104 @@
 <title>AI Office เสือ</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* -- tokens -- */
 :root {
-  /* compact dashboard: dark base, amber accent for TikTok energy */
-  --bg: #f6f5f0;
-  --bg2: #fff;
-  --fg: #1a1a1a;
-  --fg2: #555;
-  --accent: #e8590c;
-  --accent2: #d9480f;
-  --green: #2b8a3e;
-  --yellow: #e67700;
-  --red: #c92a2a;
-  --blue: #1971c2;
-  --border: #ddd;
-  --card-shadow: 0 1px 3px rgba(0,0,0,.08);
-  --radius: 10px;
-  font-family: 'IBM Plex Sans Thai', sans-serif;
-  color-scheme: light;
+  --bg: #f6f5f0; --bg2: #fff; --fg: #1a1a1a; --fg2: #555;
+  --accent: #e8590c; --accent2: #d9480f;
+  --green: #2b8a3e; --yellow: #e67700; --red: #c92a2a; --blue: #1971c2; --purple: #7048e8;
+  --border: #ddd; --card-shadow: 0 1px 3px rgba(0,0,0,.08); --radius: 10px;
+  font-family: 'IBM Plex Sans Thai', sans-serif; color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111;
-    --bg2: #1a1a1a;
-    --fg: #e8e6e1;
-    --fg2: #999;
-    --accent: #ff6b35;
-    --accent2: #ff8c5a;
-    --green: #51cf66;
-    --yellow: #fcc419;
-    --red: #ff6b6b;
-    --blue: #74c0fc;
-    --border: #333;
-    --card-shadow: 0 1px 3px rgba(0,0,0,.3);
-    color-scheme: dark;
+    --bg:#111;--bg2:#1a1a1a;--fg:#e8e6e1;--fg2:#999;--accent:#ff6b35;--accent2:#ff8c5a;
+    --green:#51cf66;--yellow:#fcc419;--red:#ff6b6b;--blue:#74c0fc;--purple:#b197fc;
+    --border:#333;--card-shadow:0 1px 3px rgba(0,0,0,.3);color-scheme:dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111;
-  --bg2: #1a1a1a;
-  --fg: #e8e6e1;
-  --fg2: #999;
-  --accent: #ff6b35;
-  --accent2: #ff8c5a;
-  --green: #51cf66;
-  --yellow: #fcc419;
-  --red: #ff6b6b;
-  --blue: #74c0fc;
-  --border: #333;
-  --card-shadow: 0 1px 3px rgba(0,0,0,.3);
-  color-scheme: dark;
+  --bg:#111;--bg2:#1a1a1a;--fg:#e8e6e1;--fg2:#999;--accent:#ff6b35;--accent2:#ff8c5a;
+  --green:#51cf66;--yellow:#fcc419;--red:#ff6b6b;--blue:#74c0fc;--purple:#b197fc;
+  --border:#333;--card-shadow:0 1px 3px rgba(0,0,0,.3);color-scheme:dark;
 }
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;background:var(--bg);color:var(--fg);}
+body{padding:16px;padding-top:max(16px,env(safe-area-inset-top));overflow-y:auto;}
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; background: var(--bg); color: var(--fg); }
-body { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); overflow-y: auto; }
+.header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.header h1{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;}
+.badge{background:var(--accent);color:#fff;font-size:.7rem;font-weight:600;padding:3px 8px;border-radius:20px;}
+.header .time{margin-left:auto;font-size:.8rem;color:var(--fg2);font-family:'JetBrains Mono',monospace;}
 
-.header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-.header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
-.header .badge { background: var(--accent); color: #fff; font-size: .7rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
-.header .time { margin-left: auto; font-size: .8rem; color: var(--fg2); font-family: 'JetBrains Mono', monospace; }
+.nav{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.nav button{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:.8rem;font-weight:600;color:var(--fg2);cursor:pointer;font-family:inherit;}
+.nav button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 20px; }
-@media (max-width: 400px) { .grid { grid-template-columns: 1fr; } }
+.section{display:none;}
+.section.show{display:block;}
 
-.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--card-shadow); }
-.card h2 { font-size: .85rem; font-weight: 600; color: var(--fg2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-.card h2 .icon { font-size: 1rem; }
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:20px;}
+@media(max-width:400px){.grid{grid-template-columns:1fr;}}
 
-/* AI team tiles */
-.ai-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
-@media (max-width: 500px) { .ai-row { grid-template-columns: repeat(2, 1fr); } }
-.ai-tile { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 10px; text-align: center; position: relative; }
-.ai-tile .dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 8px; right: 8px; }
-.ai-tile .name { font-weight: 600; font-size: .85rem; margin-bottom: 2px; }
-.ai-tile .role { font-size: .7rem; color: var(--fg2); }
-.dot-green { background: var(--green); }
-.dot-yellow { background: var(--yellow); }
-.dot-blue { background: var(--blue); }
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--card-shadow);}
+.card h2{font-size:.85rem;font-weight:600;color:var(--fg2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 
-/* schedule table */
-.sched-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
-.sched-table th { text-align: left; font-weight: 500; color: var(--fg2); padding: 4px 6px; border-bottom: 1px solid var(--border); font-size: .7rem; text-transform: uppercase; }
-.sched-table td { padding: 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
-.sched-table tr:last-child td { border-bottom: none; }
-.status { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: .68rem; font-weight: 600; }
-.s-ok { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
-.s-fail { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); }
-.s-off { background: color-mix(in srgb, var(--fg2) 15%, transparent); color: var(--fg2); }
-.s-fix { background: color-mix(in srgb, var(--yellow) 15%, transparent); color: var(--yellow); }
-.model-tag { font-family: 'JetBrains Mono', monospace; font-size: .65rem; color: var(--fg2); }
+.ai-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+@media(max-width:500px){.ai-row{grid-template-columns:repeat(2,1fr);}}
+.ai-tile{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 10px;text-align:center;position:relative;}
+.ai-tile .dot{width:8px;height:8px;border-radius:50%;position:absolute;top:8px;right:8px;}
+.ai-tile .name{font-weight:600;font-size:.85rem;margin-bottom:2px;}
+.ai-tile .role{font-size:.7rem;color:var(--fg2);}
+.dot-green{background:var(--green);} .dot-yellow{background:var(--yellow);} .dot-blue{background:var(--blue);}
 
-/* channels */
-.ch-list { list-style: none; }
-.ch-list li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: .82rem; }
-.ch-list li:last-child { border-bottom: none; }
-.ch-focus { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-size: .65rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
-.ch-handle { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--fg2); }
+.sched-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.sched-table th{text-align:left;font-weight:500;color:var(--fg2);padding:4px 6px;border-bottom:1px solid var(--border);font-size:.7rem;text-transform:uppercase;}
+.sched-table td{padding:6px;border-bottom:1px solid var(--border);vertical-align:top;}
+.sched-table tr:last-child td{border-bottom:none;}
+.status{display:inline-block;padding:2px 6px;border-radius:4px;font-size:.68rem;font-weight:600;}
+.s-ok{background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green);}
+.s-fail{background:color-mix(in srgb,var(--red) 15%,transparent);color:var(--red);}
+.s-off{background:color-mix(in srgb,var(--fg2) 15%,transparent);color:var(--fg2);}
+.s-fix{background:color-mix(in srgb,var(--yellow) 15%,transparent);color:var(--yellow);}
+.s-new{background:color-mix(in srgb,var(--purple) 15%,transparent);color:var(--purple);}
+.model-tag{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--fg2);}
 
-/* plugins */
-.plug-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-.plug { font-size: .72rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); font-weight: 500; }
-.plug.active { border-color: var(--green); color: var(--green); }
+.ch-list{list-style:none;}
+.ch-list li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:.82rem;flex-wrap:wrap;}
+.ch-list li:last-child{border-bottom:none;}
+.ch-focus{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-size:.65rem;font-weight:600;padding:2px 6px;border-radius:4px;}
+.ch-handle{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--fg2);}
 
-/* pending */
-.pend-list { list-style: none; }
-.pend-list li { font-size: .8rem; padding: 5px 0; border-bottom: 1px solid var(--border); display: flex; gap: 6px; }
-.pend-list li:last-child { border-bottom: none; }
-.pend-list .check { width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.pend-list .check.done { background: var(--green); border-color: var(--green); }
-.pend-list .check.done::after { content: '✓'; color: #fff; font-size: .65rem; font-weight: 700; }
+.plug-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.plug{font-size:.72rem;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font-weight:500;}
+.plug.active{border-color:var(--green);color:var(--green);}
 
-/* notion links */
-.notion-links { display: flex; flex-direction: column; gap: 4px; }
-.notion-links a { font-size: .78rem; color: var(--blue); text-decoration: none; padding: 4px 0; border-bottom: 1px solid var(--border); }
-.notion-links a:hover { text-decoration: underline; }
-.notion-links a:last-child { border-bottom: none; }
-.nid { font-family: 'JetBrains Mono', monospace; font-size: .62rem; color: var(--fg2); margin-left: 4px; }
+.pend-list{list-style:none;}
+.pend-list li{font-size:.8rem;padding:5px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;}
+.pend-list li:last-child{border-bottom:none;}
+.pend-list .check{width:16px;height:16px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pend-list .check.done{background:var(--green);border-color:var(--green);}
+.pend-list .check.done::after{content:'\2713';color:#fff;font-size:.65rem;font-weight:700;}
 
-.footer { text-align: center; font-size: .7rem; color: var(--fg2); padding: 16px 0 8px; }
+.notion-links{display:flex;flex-direction:column;gap:4px;}
+.notion-links a{font-size:.78rem;color:var(--blue);text-decoration:none;padding:4px 0;border-bottom:1px solid var(--border);}
+.notion-links a:hover{text-decoration:underline;}
+.notion-links a:last-child{border-bottom:none;}
+.nid{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--fg2);margin-left:4px;}
+
+/* Roadmap */
+.feat{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;background:var(--bg);}
+.feat-h{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.feat-icon{font-size:1.1rem;}
+.feat-d{font-size:.78rem;color:var(--fg2);margin-bottom:4px;line-height:1.4;}
+.feat-ai{font-size:.68rem;font-weight:600;color:var(--accent);}
+.feat-status{display:inline-block;font-size:.65rem;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:auto;}
+
+/* Pipeline */
+.pipe{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:12px 0;font-size:.75rem;}
+.pipe-step{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-weight:500;text-align:center;}
+.pipe-arrow{color:var(--fg2);font-weight:700;}
+
+.footer{text-align:center;font-size:.7rem;color:var(--fg2);padding:16px 0 8px;}
 </style>
 </head>
 <body>
@@ -135,36 +114,28 @@ body { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); overflow
   <span class="time" id="clock"></span>
 </div>
 
-<!-- AI Team -->
+<div class="nav">
+  <button class="active" onclick="showTab(this,'main')">ภาพรวม</button>
+  <button onclick="showTab(this,'roadmap')">Roadmap</button>
+  <button onclick="showTab(this,'pipeline')">Pipeline</button>
+  <button onclick="showTab(this,'notion')">Notion</button>
+  <button onclick="showTab(this,'pending')">งานค้าง</button>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="section show" id="sec-main">
+
 <div class="ai-row">
-  <div class="ai-tile">
-    <div class="dot dot-green"></div>
-    <div class="name">Claude</div>
-    <div class="role">7 งานอัตโนมัติ</div>
-  </div>
-  <div class="ai-tile">
-    <div class="dot dot-green"></div>
-    <div class="name">ChatGPT</div>
-    <div class="role">วางแผน สั่งการ</div>
-  </div>
-  <div class="ai-tile">
-    <div class="dot dot-yellow"></div>
-    <div class="name">Gemini</div>
-    <div class="role">AI Studio</div>
-  </div>
-  <div class="ai-tile">
-    <div class="dot dot-blue"></div>
-    <div class="name">Notion</div>
-    <div class="role">ศูนย์ข้อมูล</div>
-  </div>
+  <div class="ai-tile"><div class="dot dot-green"></div><div class="name">Claude</div><div class="role">7 งานอัตโนมัติ</div></div>
+  <div class="ai-tile"><div class="dot dot-green"></div><div class="name">ChatGPT</div><div class="role">วางแผน สั่งการ</div></div>
+  <div class="ai-tile"><div class="dot dot-yellow"></div><div class="name">Gemini</div><div class="role">AI Studio</div></div>
+  <div class="ai-tile"><div class="dot dot-blue"></div><div class="name">Notion</div><div class="role">ศูนย์ข้อมูล</div></div>
 </div>
 
 <div class="grid">
-
-  <!-- Scheduled Tasks -->
-  <div class="card" style="grid-column: 1 / -1;">
-    <h2><span class="icon">⏱</span> งานตั้งเวลา</h2>
-    <div style="overflow-x: auto;">
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#9201; งานตั้งเวลา</h2>
+    <div style="overflow-x:auto;">
     <table class="sched-table">
       <thead><tr><th>เวลา</th><th>ชื่อ</th><th>โมเดล</th><th>สถานะ</th></tr></thead>
       <tbody>
@@ -180,59 +151,129 @@ body { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); overflow
     </div>
   </div>
 
-  <!-- TikTok Channels -->
   <div class="card">
-    <h2><span class="icon">📺</span> ช่อง TikTok (4)</h2>
+    <h2>&#128250; ช่อง TikTok (4)</h2>
     <ul class="ch-list">
-      <li>
-        <span>เจ้าเสือ</span>
-        <span class="ch-focus">โฟกัส · ขนม</span>
-        <span class="ch-handle">@www.wayu1989</span>
-      </li>
-      <li>
-        <span>เสือ2992</span>
-        <span class="ch-focus">โฟกัส · อาหาร</span>
-        <span class="ch-handle">@www.dada198</span>
-      </li>
-      <li>
-        <span>เสือ 945</span>
-        <span class="ch-handle">@ok_d198</span>
-      </li>
-      <li>
-        <span>ชีวิตติด รีวิวของดี</span>
-        <span class="ch-handle">@198da_d</span>
-      </li>
+      <li><span>เจ้าเสือ</span><span class="ch-focus">โฟกัส &#183; ขนม</span><span class="ch-handle">@www.wayu1989</span></li>
+      <li><span>เสือ2992</span><span class="ch-focus">โฟกัส &#183; อาหาร</span><span class="ch-handle">@www.dada198</span></li>
+      <li><span>เสือ 945</span><span class="ch-handle">@ok_d198</span></li>
+      <li><span>ชีวิตติด รีวิวของดี</span><span class="ch-handle">@198da_d</span></li>
     </ul>
-    <div style="margin-top:8px; font-size:.72rem; color:var(--fg2);">เสือ = Affiliate (นายหน้า) ขายของร้านอื่น</div>
+    <div style="margin-top:8px;font-size:.72rem;color:var(--fg2);">เสือ = Affiliate (นายหน้า) ขายของร้านอื่น</div>
   </div>
 
-  <!-- Plugins -->
   <div class="card">
-    <h2><span class="icon">🔌</span> ปลั๊กอินที่เชื่อม</h2>
+    <h2>&#128268; ปลั๊กอิน (16)</h2>
     <div class="plug-grid">
-      <span class="plug active">Windsor.ai</span>
-      <span class="plug active">TikTok Biz</span>
-      <span class="plug active">Metricool</span>
-      <span class="plug active">AfterShip</span>
-      <span class="plug active">AdWhispr</span>
-      <span class="plug active">Canva</span>
-      <span class="plug active">OpusClip</span>
-      <span class="plug active">Google Drive</span>
-      <span class="plug active">Gmail</span>
-      <span class="plug active">G Calendar</span>
-      <span class="plug active">Dropbox</span>
-      <span class="plug active">Figma</span>
-      <span class="plug active">MS 365</span>
-      <span class="plug active">vidIQ</span>
-      <span class="plug active">Supermetrics</span>
-      <span class="plug active">Shopify</span>
+      <span class="plug active">Windsor.ai</span><span class="plug active">TikTok Biz</span>
+      <span class="plug active">Metricool</span><span class="plug active">AfterShip</span>
+      <span class="plug active">AdWhispr</span><span class="plug active">Canva</span>
+      <span class="plug active">OpusClip</span><span class="plug active">Google Drive</span>
+      <span class="plug active">Gmail</span><span class="plug active">G Calendar</span>
+      <span class="plug active">Dropbox</span><span class="plug active">Figma</span>
+      <span class="plug active">MS 365</span><span class="plug active">vidIQ</span>
+      <span class="plug active">Supermetrics</span><span class="plug active">Shopify</span>
     </div>
-    <div style="margin-top:10px; font-size:.7rem; color:var(--fg2);">Windsor Trial 30 วัน · vidIQ ห้ามใช้เครดิต</div>
   </div>
 
-  <!-- Notion Pages -->
   <div class="card">
-    <h2><span class="icon">📑</span> หน้า Notion สำคัญ</h2>
+    <h2>&#127942; เกณฑ์สินค้า Affiliate (10)</h2>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:.8rem;">
+      <div style="display:flex;justify-content:space-between;"><span>มีแอดวิ่งอยู่</span><strong>3</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span>ยอดขายเติบโต</span><strong>2</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span>คู่แข่งน้อย</span><strong>2</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span>คอมมิชชันดี</span><strong>2</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span>เรตติ้งร้านดี</span><strong>1</strong></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== ROADMAP ===== -->
+<div class="section" id="sec-roadmap">
+<div class="grid">
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#128640; ทำได้เลย</h2>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#128269;</span><strong>Auto Product Scout</strong></div><div class="feat-d">หาสินค้า Affiliate อัตโนมัติตามเกณฑ์ 10 คะแนน สแกนสินค้ายอดนิยม เทียบคู่แข่ง คำนวณกำไร</div><div class="feat-ai">Claude + Windsor + AdWhispr</div></div>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#128202;</span><strong>คลิป Scorecard</strong></div><div class="feat-d">ให้คะแนนคลิปทุกวัน ตัวไหนควรยิงแอดต่อ ตัวไหนควรหยุด ตัวไหนควรทำซ้ำ</div><div class="feat-ai">Claude Haiku + Windsor tiktok_organic</div></div>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#128276;</span><strong>แจ้งเตือนฉลาด</strong></div><div class="feat-d">แจ้งเฉพาะเรื่องสำคัญ: คลิปพุ่ง / แอดหมดงบ / ออเดอร์ผิดปกติ / คู่แข่งเพิ่มแอดใหม่</div><div class="feat-ai">Claude &#8594; Push Notification</div></div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#128197; 1-2 สัปดาห์</h2>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#127916;</span><strong>Content Pipeline</strong></div><div class="feat-d">Gemini ร่างสคริปต์ &#8594; Canva ออกแบบ &#8594; OpusClip ตัดคลิป &#8594; เสืออนุมัติ &#8594; โพสต์</div><div class="feat-ai">Gemini + Canva + OpusClip + Metricool</div></div>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#128373;</span><strong>คู่แข่ง Monitor</strong></div><div class="feat-d">AdWhispr ติดตามโฆษณาคู่แข่งอัตโนมัติ แจ้งเมื่อมีแอดใหม่ วิเคราะห์กลยุทธ์</div><div class="feat-ai">AdWhispr + Claude</div></div>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#128176;</span><strong>Revenue Dashboard</strong></div><div class="feat-d">ดึงยอดขาย + ค่าแอด + คอมมิชชัน มาแสดงกราฟ คำนวณกำไรสุทธิรายวัน</div><div class="feat-ai">Windsor + TikTok Shop + Ads</div></div>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#129504;</span><strong>Memory AI</strong></div><div class="feat-d">ทุก AI จำสิ่งที่เสือสอนได้ แชร์ความจำผ่าน Notion กลาง เรียนรู้จากผลลัพธ์</div><div class="feat-ai">Notion Memory &#8594; ทุก AI</div></div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#127757; ระยะไกล</h2>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#9881;</span><strong>AI Orchestrator จริง</strong></div><div class="feat-d">ระบบสั่งงาน AI ทุกตัวอัตโนมัติ เลือก AI ตามงาน failover เอง Circuit Breaker + Provider Scoring</div><div class="feat-ai">ต้องการ: Gemini API key + เครื่องจริง</div></div>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#128184;</span><strong>Auto Ads Optimize</strong></div><div class="feat-d">ปรับงบโฆษณาอัตโนมัติตามผลจริง หยุดแอดที่ขาดทุน เพิ่มงบแอดที่กำไร</div><div class="feat-ai">ต้องการ: เสืออนุมัติกฎ + TikTok Ads API</div></div>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#128172;</span><strong>Live Chat Bot</strong></div><div class="feat-d">ตอบคอมเมนต์ TikTok อัตโนมัติ ตอบคำถามสินค้า ส่งลิงก์ซื้อ</div><div class="feat-ai">ต้องระวังเรื่องสิทธิ์</div></div>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#127760;</span><strong>Multi-platform</strong></div><div class="feat-d">ขยายไป Facebook / Instagram / YouTube พร้อมกัน โพสต์ข้ามแพลตฟอร์ม</div><div class="feat-ai">ต้องการ: ล็อกอิน Facebook Windsor</div></div>
+    <div class="feat"><div class="feat-h"><span class="feat-icon">&#9988;</span><strong>AI ตัดคลิปเอง</strong></div><div class="feat-d">OpusClip + vidIQ วิเคราะห์แล้วตัดคลิปสั้นอัตโนมัติจากวิดีโอยาว</div><div class="feat-ai">ต้องการ: วิดีโอต้นฉบับ</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ===== PIPELINE ===== -->
+<div class="section" id="sec-pipeline">
+<div class="grid">
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#128260; Content Pipeline (เต็มรูปแบบ)</h2>
+    <div class="pipe">
+      <div class="pipe-step">&#128269; Product Scout<br><small>หาสินค้า</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#129504; Gemini<br><small>ร่างสคริปต์</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#127916; OpusClip<br><small>ตัดคลิป</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#127912; Canva<br><small>ออกแบบ</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#9989; เสืออนุมัติ</div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128232; โพสต์<br><small>Metricool</small></div>
+    </div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#128200; Ads Pipeline</h2>
+    <div class="pipe">
+      <div class="pipe-step">&#128202; Scorecard<br><small>ให้คะแนนคลิป</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128640; TikTok Ads<br><small>ยิงแอด</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128176; Windsor<br><small>ติดตามผล</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128276; แจ้งเตือน<br><small>งบ/ผลลัพธ์</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128184; Auto Optimize<br><small>ปรับงบ</small></div>
+    </div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#128373; Competitor Pipeline</h2>
+    <div class="pipe">
+      <div class="pipe-step">&#128269; AdWhispr<br><small>หาคู่แข่ง</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128202; วิเคราะห์<br><small>แอดที่วิ่งอยู่</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128161; Insight<br><small>จุดแข็ง/จุดอ่อน</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#127919; ปรับกลยุทธ์<br><small>เสือตัดสินใจ</small></div>
+    </div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#129302; AI Orchestrator Pipeline</h2>
+    <div class="pipe">
+      <div class="pipe-step">&#128100; คำสั่งเสือ</div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128218; Planner<br><small>วางแผน</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128270; Researcher<br><small>หาข้อมูล</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#9881; Router<br><small>เลือก AI</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#9889; Executor<br><small>ทำงาน</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#128270; Checker<br><small>ตรวจ</small></div><span class="pipe-arrow">&#8594;</span>
+      <div class="pipe-step">&#9989; ผลลัพธ์</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== NOTION ===== -->
+<div class="section" id="sec-notion">
+<div class="grid">
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#128209; หน้า Notion สำคัญ</h2>
     <div class="notion-links">
       <a href="#">ศูนย์กลาง (Hub) <span class="nid">421cfb03…258f</span></a>
       <a href="#">AI Office Control Center <span class="nid">423cfb03…6ac3</span></a>
@@ -241,14 +282,25 @@ body { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); overflow
       <a href="#">API Registry <span class="nid">424cfb03…4c0f</span></a>
       <a href="#">GMV Max + Product <span class="nid">423cfb03…7e50</span></a>
       <a href="#">เกณฑ์ให้คะแนนสินค้า <span class="nid">423cfb03…0737</span></a>
-      <a href="#">Handoff → ChatGPT Work <span class="nid">424cfb03…d13b</span></a>
+      <a href="#">Handoff ChatGPT Work <span class="nid">424cfb03…d13b</span></a>
       <a href="#">Gemini Status <span class="nid">424cfb03…ab2b</span></a>
+      <a href="#">Gemini Daily Plan <span class="nid">424cfb03…8a45</span></a>
+      <a href="#">Focus Memory (อาหาร) <span class="nid">423cfb03…d788</span></a>
+      <a href="#">Affiliate Memory <span class="nid">423cfb03…ce27</span></a>
+      <a href="#">Channel Category <span class="nid">423cfb03…539e</span></a>
+      <a href="#">ACK/Guardrails <span class="nid">423cfb03…c759</span></a>
+      <a href="#">Plan Map <span class="nid">423cfb03…b6b3</span></a>
+      <a href="#">Plugin Catalog <span class="nid">41ccfb03…017a</span></a>
     </div>
   </div>
+</div>
+</div>
 
-  <!-- Pending -->
-  <div class="card">
-    <h2><span class="icon">📋</span> งานค้าง (รอเสือตัดสินใจ)</h2>
+<!-- ===== PENDING ===== -->
+<div class="section" id="sec-pending">
+<div class="grid">
+  <div class="card" style="grid-column:1/-1;">
+    <h2>&#128203; งานค้าง (กดติ๊กได้)</h2>
     <ul class="pend-list" id="pending">
       <li><div class="check" onclick="toggle(this)"></div><span>รวม video-joiner เข้า main</span></li>
       <li><div class="check" onclick="toggle(this)"></div><span>แผนคอนเทนต์ 7 วัน 4 ช่อง</span></li>
@@ -257,57 +309,47 @@ body { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); overflow
       <li><div class="check" onclick="toggle(this)"></div><span>ยืนยัน "เสือ954" = "เสือ 945"</span></li>
       <li><div class="check" onclick="toggle(this)"></div><span>แคป Kalodata/FastMoss ตารางสินค้า</span></li>
       <li><div class="check" onclick="toggle(this)"></div><span>Connect: Malwarebytes, Blockscout, WordPress</span></li>
-      <li><div class="check" onclick="toggle(this)"></div><span>TikTok Shop invitation → AfterShip</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>TikTok Shop invitation &#8594; AfterShip</span></li>
       <li><div class="check" onclick="toggle(this)"></div><span>ACK: CMD-20261126-CLAUDE-AIO-008</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>ChatGPT Work ACK: CMD-20261126-CHATGPTWORK-001</span></li>
+      <li><div class="check" onclick="toggle(this)"></div><span>ลบไฟล์เอกสารเก่าใน GitHub</span></li>
     </ul>
   </div>
-
-  <!-- Scoring -->
-  <div class="card">
-    <h2><span class="icon">🏆</span> เกณฑ์สินค้า Affiliate (10 คะแนน)</h2>
-    <div style="display:flex; flex-direction:column; gap:4px; font-size:.8rem;">
-      <div style="display:flex; justify-content:space-between;"><span>มีแอดวิ่งอยู่</span><strong>3</strong></div>
-      <div style="display:flex; justify-content:space-between;"><span>ยอดขายเติบโต</span><strong>2</strong></div>
-      <div style="display:flex; justify-content:space-between;"><span>คู่แข่งน้อย</span><strong>2</strong></div>
-      <div style="display:flex; justify-content:space-between;"><span>คอมมิชชันดี</span><strong>2</strong></div>
-      <div style="display:flex; justify-content:space-between;"><span>เรตติ้งร้านดี</span><strong>1</strong></div>
-    </div>
-  </div>
-
+</div>
 </div>
 
 <div class="footer">
-  AI Office เสือ · Claude + ChatGPT + Gemini + Notion<br>
-  สร้าง 26 พ.ย. 2569 · ทุกอย่างอยู่ใน Notion
+  AI Office เสือ &#183; Claude + ChatGPT + Gemini + Notion<br>
+  Feature ทั้งหมด 13 รายการ &#183; ปลั๊กอิน 16 ตัว &#183; งานอัตโนมัติ 7 รายการ
 </div>
 
 <script>
-function updateClock() {
-  const d = new Date();
-  const th = d.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-  const dd = d.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: 'numeric' });
-  document.getElementById('clock').textContent = dd + ' ' + th;
+function updateClock(){
+  const d=new Date();
+  const th=d.toLocaleString('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  const dd=d.toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('clock').textContent=dd+' '+th;
 }
-updateClock();
-setInterval(updateClock, 1000);
+updateClock(); setInterval(updateClock,1000);
 
-function toggle(el) {
+function showTab(btn,id){
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('show'));
+  document.getElementById('sec-'+id).classList.add('show');
+}
+
+function toggle(el){
   el.classList.toggle('done');
-  try {
-    const states = [...document.querySelectorAll('.check')].map(c => c.classList.contains('done') ? '1' : '0');
-    localStorage.setItem('pending', states.join(','));
-  } catch(e) {}
+  try{
+    const states=[...document.querySelectorAll('.check')].map(c=>c.classList.contains('done')?'1':'0');
+    localStorage.setItem('pending2',states.join(','));
+  }catch(e){}
 }
-
-try {
-  const saved = localStorage.getItem('pending');
-  if (saved) {
-    const states = saved.split(',');
-    document.querySelectorAll('.check').forEach((c, i) => {
-      if (states[i] === '1') c.classList.add('done');
-    });
-  }
-} catch(e) {}
+try{
+  const saved=localStorage.getItem('pending2');
+  if(saved){saved.split(',').forEach((v,i)=>{const c=document.querySelectorAll('.check')[i];if(v==='1'&&c)c.classList.add('done');});}
+}catch(e){}
 </script>
 </body>
 </html>
