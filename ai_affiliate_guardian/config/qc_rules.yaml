@@ -1,0 +1,33 @@
+# Quality Control Rules
+
+content_qc:
+  min_script_length: 50
+  max_script_length: 5000
+  required_elements:
+    - hook
+    - body
+    - call_to_action
+  forbidden_words: []
+
+fact_qc:
+  price_must_match_source: true
+  claim_must_have_evidence: true
+  unknown_label: "ยังไม่ยืนยัน"
+
+media_qc:
+  min_resolution: 720
+  max_file_size_mb: 500
+  allowed_formats: [mp4, mov, jpg, png]
+
+audio_qc:
+  min_clarity_score: 0.7
+  background_noise_max: -20
+
+affiliate_qc:
+  link_must_be_valid: true
+  commission_must_be_confirmed: true
+  expired_link_action: flag_and_pause
+
+final_qc:
+  all_checks_must_pass: true
+  partial_pass_action: hold_for_review

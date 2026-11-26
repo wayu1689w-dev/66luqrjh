@@ -1,0 +1,37 @@
+# Approval Gate Rules
+
+gates:
+  product_intake:
+    auto_approve: false
+    requires: human_approval
+    notify: owner
+
+  script_publish:
+    auto_approve: false
+    requires: human_approval
+    notify: owner
+
+  ad_spend:
+    auto_approve: false
+    requires: human_approval
+    max_auto_budget: 0
+    notify: owner
+
+  content_publish:
+    auto_approve: false
+    requires: human_approval
+    notify: owner
+
+  external_api_call:
+    auto_approve: false
+    requires: human_approval
+    notify: owner
+
+invalidation:
+  triggers:
+    - price_changed
+    - product_unavailable
+    - commission_changed
+    - claim_disputed
+    - link_expired
+  action: revoke_approval_and_flag

@@ -1,0 +1,36 @@
+# AI Affiliate 3.0 — System Configuration
+
+version: "3.0"
+codename: "AI Affiliate Guardian"
+
+evidence_rules:
+  unknown_is_not_zero: true
+  estimate_is_not_confirmed: true
+  confirmed_is_not_paid: true
+
+permission_levels:
+  READ: auto
+  WRITE: policy
+  HIGH_IMPACT: human_approval
+
+storage:
+  primary: notion
+  code_only: github_private
+  media_only: local_then_drive
+
+security:
+  no_secrets_in_code: true
+  no_public_github: true
+  no_auto_publish: true
+  no_auto_spend: true
+  no_auto_message: true
+
+timezone: "Asia/Bangkok"
+
+retry:
+  max_attempts: 3
+  backoff_seconds: [1, 5, 15]
+
+circuit_breaker:
+  failure_threshold: 3
+  recovery_seconds: 30

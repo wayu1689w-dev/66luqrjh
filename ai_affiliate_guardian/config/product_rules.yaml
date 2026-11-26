@@ -1,0 +1,30 @@
+# Product Eligibility & Ranking Rules
+
+eligibility:
+  required_fields:
+    - product_name
+    - commission_rate
+    - product_category
+    - source_platform
+  forbidden:
+    - สินค้าผิดกฎหมาย
+    - สินค้าละเมิดลิขสิทธิ์
+    - สินค้าอันตราย
+    - สินค้าหลอกลวง
+
+ranking:
+  weights:
+    commission_rate: 0.30
+    product_quality: 0.25
+    market_demand: 0.20
+    brand_trust: 0.15
+    freshness: 0.10
+  min_score: 0.3
+
+freshness:
+  max_days_without_update: 30
+  stale_action: flag_for_review
+
+duplicate:
+  check_fields: [product_name, source_platform, affiliate_link]
+  action: reject_duplicate

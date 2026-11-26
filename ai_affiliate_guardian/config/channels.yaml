@@ -1,0 +1,64 @@
+# Channel Configuration — 4 ช่อง TikTok แยกกันสมบูรณ์
+# แต่ละช่องมี script, approval, metric แยกจากกัน
+
+channels:
+  - id: ch_monster_great
+    name: "มอนสเตอร์ เกรท"
+    slug: monster_great
+    category: food
+    role: primary_food
+    status: ACTIVE
+    tiktok_handle: null
+    focus:
+      - อาหาร
+      - ร้านยิงแอด
+      - affiliate
+    script_tone: สนุก กินจริง โชว์จริง
+    approval_required: true
+
+  - id: ch_suea2992
+    name: "เสือ 2992"
+    slug: suea2992
+    category: food
+    role: secondary_food
+    status: ACTIVE
+    tiktok_handle: null
+    focus:
+      - อาหาร
+      - ร้านยิงแอด
+      - affiliate
+    script_tone: จริงจัง รีวิวละเอียด
+    approval_required: true
+
+  - id: ch_suea954
+    name: "เสือ 945"
+    slug: suea954
+    category: hold
+    role: reserve
+    status: HOLD
+    tiktok_handle: null
+    focus: []
+    script_tone: null
+    approval_required: true
+    note: "รอยืนยันว่าเป็น 945 หรือ 954"
+
+  - id: ch_review_good
+    name: "ชีวิตติดรีวิวของดี"
+    slug: review_good
+    category: product_review
+    role: product_review
+    status: ACTIVE
+    tiktok_handle: null
+    focus:
+      - สินค้าทั่วไป
+      - รีวิวของดี
+      - affiliate
+    script_tone: เล่าให้ฟัง ใช้จริงบอกจริง
+    approval_required: true
+
+isolation_rules:
+  cross_channel_content: FORBIDDEN
+  shared_script: FORBIDDEN
+  shared_product_across_channels: ALLOWED_WITH_DIFFERENT_ANGLE
+  shared_metrics: FORBIDDEN
+  shared_approval: FORBIDDEN

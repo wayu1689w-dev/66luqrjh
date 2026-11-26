@@ -1,0 +1,52 @@
+# Kill Switch Configuration
+# ทุกการเชื่อมต่อภายนอกปิดไว้เป็นค่าเริ่มต้น
+# เปิดได้เฉพาะเมื่อเจ้าของระบบสั่งเท่านั้น
+
+connections:
+  tiktok_api: DISABLED
+  tiktok_shop: DISABLED
+  notion_api: DISABLED
+  google_drive: DISABLED
+  google_ai_studio: DISABLED
+  windsor_ai: DISABLED
+  metricool: DISABLED
+  canva: DISABLED
+  figma: DISABLED
+  wordpress: DISABLED
+  gmail: DISABLED
+  outlook: DISABLED
+  dropbox: DISABLED
+  sharepoint: DISABLED
+  opusclip: DISABLED
+  supermetrics: DISABLED
+  adwhispr: DISABLED
+  microsoft_graph: DISABLED
+  openai: DISABLED
+  gemini: DISABLED
+  claude_api: DISABLED
+  meta_ai: DISABLED
+  aftership: DISABLED
+  shopify: DISABLED
+  airtable: DISABLED
+  malwarebytes: DISABLED
+  blockscout: DISABLED
+
+publishing:
+  auto_publish: DISABLED
+  manual_publish: DISABLED
+  schedule_publish: DISABLED
+
+spending:
+  ad_budget: DISABLED
+  credit_usage: DISABLED
+  subscription: DISABLED
+
+messaging:
+  send_email: DISABLED
+  send_chat: DISABLED
+  send_notification: DISABLED
+
+data:
+  delete_data: DISABLED
+  export_data: DISABLED
+  backup_data: DISABLED
