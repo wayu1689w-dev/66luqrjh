@@ -54,5 +54,19 @@
     "target": "read",
     "details": "role=editor risk=R1",
     "timestamp": "2026-11-27T22:00:31.877077+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:claude",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-27T22:11:01.265738+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:claude",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-27T22:11:01.267052+00:00"
   }
 ]
