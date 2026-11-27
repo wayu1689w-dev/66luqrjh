@@ -256,6 +256,98 @@ PLUGIN_REGISTRY = {
         "action_type": "MCP_CALL",
         "external": True,
     },
+    "windsor_social": {
+        "name": "Windsor.ai Social Media",
+        "category": "social_media",
+        "risk": "R2",
+        "requires_auth": True,
+        "required_permission": "read",
+        "action_type": "MCP_CALL",
+        "external": True,
+    },
+    "claude_academy": {
+        "name": "Claude Academy",
+        "category": "learning",
+        "risk": "R0",
+        "requires_auth": False,
+        "required_permission": "read",
+        "action_type": "MCP_CALL",
+        "external": True,
+    },
+    "configure_memory": {
+        "name": "Configure Memory",
+        "category": "memory",
+        "risk": "R1",
+        "requires_auth": True,
+        "required_permission": "write",
+        "action_type": "MCP_CALL",
+        "external": True,
+    },
+    "common_room": {
+        "name": "Common Room",
+        "category": "gtm",
+        "risk": "R2",
+        "requires_auth": True,
+        "required_permission": "read",
+        "action_type": "MCP_CALL",
+        "external": True,
+    },
+    "fourthwall": {
+        "name": "Fourthwall",
+        "category": "commerce",
+        "risk": "R3",
+        "requires_auth": True,
+        "required_permission": "write",
+        "action_type": "COMMERCE",
+        "external": True,
+    },
+    "gemini_crypto": {
+        "name": "Gemini Crypto",
+        "category": "finance",
+        "risk": "R3",
+        "requires_auth": True,
+        "required_permission": "read",
+        "action_type": "MCP_CALL",
+        "external": True,
+    },
+    "jetpost": {
+        "name": "Jetpost",
+        "category": "communication",
+        "risk": "R2",
+        "requires_auth": True,
+        "required_permission": "write",
+        "action_type": "SEND",
+        "external": True,
+    },
+    "microsoft_learn": {
+        "name": "Microsoft Learn",
+        "category": "learning",
+        "risk": "R0",
+        "requires_auth": False,
+        "required_permission": "read",
+        "action_type": "MCP_CALL",
+        "external": True,
+    },
+    "otter_ai": {
+        "name": "Otter.ai",
+        "category": "meeting",
+        "risk": "R1",
+        "requires_auth": True,
+        "required_permission": "read",
+        "action_type": "MCP_CALL",
+        "external": True,
+    },
+    "vidiq": {
+        "name": "vidIQ",
+        "category": "video",
+        "risk": "R3",
+        "requires_auth": True,
+        "required_permission": "write",
+        "action_type": "MCP_CALL",
+        "external": True,
+        "disabled": True,
+        "disabled_reason": "ห้ามเรียก vidIQ ตาม spec — อาจมีผลข้างเคียง",
+    },
 }
 
 
@@ -338,3 +430,28 @@ def plugin_count() -> int:
 
 def categories() -> list[str]:
     return sorted(set(v["category"] for v in PLUGIN_REGISTRY.values()))
+
+
+def search_plugins(query: str) -> list[dict]:
+    q = query.lower()
+    results = []
+    for key, info in PLUGIN_REGISTRY.items():
+        if (q in key.lower()
+                or q in info["name"].lower()
+                or q in info["category"].lower()):
+            results.append({"key": key, **info})
+    return results
+
+
+def list_connected() -> list[dict]:
+    return [
+        {"key": k, **v} for k, v in PLUGIN_REGISTRY.items()
+        if not v.get("disabled")
+    ]
+
+
+def list_disabled() -> list[dict]:
+    return [
+        {"key": k, **v} for k, v in PLUGIN_REGISTRY.items()
+        if v.get("disabled")
+    ]
