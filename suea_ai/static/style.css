@@ -24,4 +24,6 @@ tr:hover{background:#1c2128}
 #security-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem}
 .sec-item{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:.6rem .8rem;font-size:.82rem}
 .sec-item strong{color:#f0883e}
+.kpi-header{padding:.6rem;background:#161b22;border:1px solid #30363d;border-radius:6px;margin-bottom:.8rem;font-size:.85rem;color:#8b949e}
+.sec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem}
 footer{text-align:center;padding:1.5rem;color:#484f58;font-size:.75rem;border-top:1px solid #21262d;margin-top:2rem}

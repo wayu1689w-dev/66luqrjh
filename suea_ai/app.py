@@ -12,8 +12,33 @@ from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
+from suea_ai.kpi_engine import get_kpi_status, get_policy, enforce_policy, compute_kpi_score, AGENTS
+from suea_ai.ack_handler import init_ack_table, record_ack, get_ack_log, get_agent_ack_summary
+from suea_ai.task_queue import init_task_table, enqueue, update_task, get_queue, queue_stats
+from suea_ai.backup_worker import backup_now, list_backups
+
 DB_PATH = Path(__file__).parent / "suea.db"
 TZ_BKK = timezone(timedelta(hours=7))
+
+APP_CONFIG = {
+    "APP_NAME": "SUEA_AI",
+    "APP_ENV": os.getenv("APP_ENV", "staging"),
+    "HOST": "127.0.0.1",
+    "PORT": 8766,
+    "FREE_ONLY": True,
+    "READ_ONLY": True,
+    "PRIVATE_MODE": True,
+    "AUTO_AD_SPEND": False,
+    "AUTO_PUBLISH": False,
+    "AUTO_CHANGE_PERMISSION": False,
+    "AUTO_CONNECT_NEW_PLUGINS": False,
+    "EXTERNAL_SHARING": False,
+    "REQUIRE_OWNER_APPROVAL": True,
+    "KPI_ENABLED": True,
+    "ACK_REQUIRED": True,
+    "REPORT_INTERVAL_SECONDS": 3600,
+    "MAX_RETRIES": 3,
+}
 
 app = FastAPI(title="SUEA AI Dashboard", version="0.8.0")
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
@@ -160,6 +185,8 @@ def check_connector_status(connector_id: str) -> dict:
 @app.on_event("startup")
 def on_startup():
     init_db()
+    init_ack_table()
+    init_task_table()
 
 
 @app.get("/")
@@ -353,3 +380,96 @@ def security_policy():
         "rbac_tiers": 4,
         "risk_approval_threshold": "R3+",
     }
+
+
+# ── KPI Engine ───────────────────────────────────────────────────
+
+@app.get("/api/kpi")
+def kpi_report():
+    return {
+        "mode": "LOCAL_ONLY",
+        "read_only": True,
+        "agents": get_kpi_status(),
+        "policy": get_policy(),
+    }
+
+
+@app.get("/api/kpi/policy")
+def kpi_policy():
+    return get_policy()
+
+
+@app.post("/api/kpi/enforce")
+async def kpi_enforce(request: Request):
+    body = await request.json()
+    action = body.get("action", "")
+    return enforce_policy(action)
+
+
+@app.get("/api/config")
+def app_config():
+    return APP_CONFIG
+
+
+# ── ACK Handler ──────────────────────────────────────────────────
+
+@app.post("/api/ack")
+async def submit_ack(request: Request):
+    body = await request.json()
+    agent = body.get("agent", "")
+    task_id = body.get("task_id", "")
+    evidence = body.get("evidence", "")
+    if not agent or not task_id:
+        raise HTTPException(400, "agent and task_id required")
+    return record_ack(agent, task_id, evidence)
+
+
+@app.get("/api/ack/log")
+def ack_log(limit: int = 50):
+    return get_ack_log(limit)
+
+
+@app.get("/api/ack/summary")
+def ack_summary():
+    return get_agent_ack_summary()
+
+
+# ── Task Queue ───────────────────────────────────────────────────
+
+@app.post("/api/tasks")
+async def create_task(request: Request):
+    body = await request.json()
+    return enqueue(
+        task_type=body.get("task_type", "general"),
+        description=body.get("description", ""),
+        assigned_agent=body.get("assigned_agent", ""),
+        priority=body.get("priority", 0),
+    )
+
+
+@app.get("/api/tasks")
+def list_tasks(status: str = "", limit: int = 50):
+    return get_queue(status, limit)
+
+
+@app.get("/api/tasks/stats")
+def task_stats():
+    return queue_stats()
+
+
+@app.patch("/api/tasks/{task_id}")
+async def patch_task(task_id: int, request: Request):
+    body = await request.json()
+    return update_task(task_id, body.get("status", "DONE"), body.get("result", ""))
+
+
+# ── Backup ───────────────────────────────────────────────────────
+
+@app.post("/api/backup")
+def do_backup():
+    return backup_now()
+
+
+@app.get("/api/backup/list")
+def backup_list():
+    return list_backups()
