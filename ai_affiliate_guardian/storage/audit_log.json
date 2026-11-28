@@ -327,5 +327,68 @@
     "target": "read",
     "details": "role=editor risk=R1",
     "timestamp": "2026-11-28T12:41:04.804388+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:figma",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-28T13:27:11.688831+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:claude",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-28T13:27:11.691050+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:claude",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-28T13:27:11.692579+00:00"
+  },
+  {
+    "actor": "admin1",
+    "action": "plugin_execute:tiktok_business",
+    "target": "read",
+    "details": "role=admin risk=R4",
+    "timestamp": "2026-11-28T13:27:11.693651+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:claude",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-28T13:27:11.695333+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:claude",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-28T13:27:11.696075+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:claude",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-28T13:27:11.699556+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:claude",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-28T13:27:11.710505+00:00"
+  },
+  {
+    "actor": "user1",
+    "action": "plugin_execute:claude",
+    "target": "read",
+    "details": "role=editor risk=R1",
+    "timestamp": "2026-11-28T13:27:11.711723+00:00"
   }
 ]
