@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUEA AI Dashboard v008</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>SUEA AI Dashboard</h1>
+        <span class="version">v008</span>
+        <span id="clock"></span>
+    </header>
+
+    <main>
+        <section id="summary" class="cards">
+            <div class="card" id="card-products">
+                <h3>สินค้า</h3>
+                <span class="big-num" id="num-products">-</span>
+            </div>
+            <div class="card" id="card-videos">
+                <h3>วิดีโอ</h3>
+                <span class="big-num" id="num-videos">-</span>
+            </div>
+            <div class="card" id="card-ads">
+                <h3>โฆษณา</h3>
+                <span class="big-num" id="num-ads">-</span>
+            </div>
+            <div class="card" id="card-connectors">
+                <h3>Connectors</h3>
+                <span class="big-num" id="num-connectors">-</span>
+            </div>
+        </section>
+
+        <section id="connectors-section">
+            <h2>Connector Status</h2>
+            <div id="connectors-list"></div>
+        </section>
+
+        <section id="products-section">
+            <h2>Product Ranking</h2>
+            <table id="products-table">
+                <thead>
+                    <tr>
+                        <th>#</th><th>ชื่อ</th><th>หมวด</th>
+                        <th>GMV</th><th>ออเดอร์</th><th>คอมมิชชั่น%</th>
+                        <th>Conversion%</th><th>Score</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <section id="videos-section">
+            <h2>Video Performance</h2>
+            <div id="video-stats" class="cards"></div>
+            <table id="videos-table">
+                <thead>
+                    <tr>
+                        <th>#</th><th>ชื่อ</th><th>Views</th>
+                        <th>Likes</th><th>Comments</th><th>Shares</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <section id="security-section">
+            <h2>Security Policy</h2>
+            <div id="security-info"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>SUEA AI Dashboard v008 — Read-Only Mode — Free Mode Only</p>
+    </footer>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>
