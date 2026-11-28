@@ -27,6 +27,7 @@ from suea_ai.automation.watchdog import Watchdog
 from suea_ai.automation.recovery_worker import RecoveryWorker
 from suea_ai.connectors.meta_ai_connector import MetaAIConnector
 from suea_ai.connectors.base_connector import get_all_connector_status
+from suea_ai.core.universal_gateway import UniversalPluginGateway, BLOCKED, ACTIVE
 from suea_ai.analyzers.product_ranking import compute_score, rank_products
 from suea_ai.analyzers.video_performance import engagement_rate, analyze_videos
 from suea_ai.analyzers.ads_profit import compute_roas, compute_cpc, analyze_ads
@@ -586,6 +587,97 @@ class TestAdsProfit(unittest.TestCase):
         result = analyze_ads(ads)
         self.assertEqual(result["profit"], 1000.0)
         self.assertGreater(result["roas"], 0)
+
+
+class TestUniversalGateway(unittest.TestCase):
+    def setUp(self):
+        self.gw = UniversalPluginGateway()
+
+    def test_default_blocked_modules(self):
+        blocked = self.gw.get_blocked()
+        blocked_ids = {m["module_id"] for m in blocked}
+        self.assertIn("universal_gateway", blocked_ids)
+        self.assertIn("meta_ai_adapter", blocked_ids)
+        self.assertIn("affiliate", blocked_ids)
+
+    def test_route_blocked_module(self):
+        result = self.gw.request_route("meta_ai_adapter", "read")
+        self.assertFalse(result["allowed"])
+        self.assertEqual(result["status"], BLOCKED)
+
+    def test_route_active_module(self):
+        result = self.gw.request_route("plugin_registry", "read")
+        self.assertTrue(result["allowed"])
+
+    def test_route_unknown_module(self):
+        result = self.gw.request_route("nonexistent", "read")
+        self.assertFalse(result["allowed"])
+
+    def test_policy_blocks_spend(self):
+        result = self.gw.request_route("plugin_registry", "spend")
+        self.assertFalse(result["allowed"])
+        self.assertIn("blocked by connection policy", result["reason"])
+
+    def test_approve_requires_owner(self):
+        result = self.gw.approve_module("meta_ai_adapter", "wrong_token")
+        self.assertFalse(result["ok"])
+
+    def test_approve_with_owner(self):
+        result = self.gw.approve_module("meta_ai_adapter", "OWNER_CONFIRMED")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], ACTIVE)
+        route = self.gw.request_route("meta_ai_adapter", "read")
+        self.assertTrue(route["allowed"])
+
+    def test_block_module(self):
+        self.gw.approve_module("affiliate", "OWNER_CONFIRMED")
+        result = self.gw.block_module("affiliate", "Security risk")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], BLOCKED)
+
+    def test_kill_all_external(self):
+        self.gw.approve_module("meta_ai_adapter", "OWNER_CONFIRMED")
+        self.gw.approve_module("affiliate", "OWNER_CONFIRMED")
+        result = self.gw.kill_all_external()
+        self.assertTrue(result["ok"])
+        self.assertGreaterEqual(result["blocked"], 2)
+        blocked_ids = {m["module_id"] for m in self.gw.get_blocked()}
+        self.assertIn("meta_ai_adapter", blocked_ids)
+        self.assertIn("affiliate", blocked_ids)
+
+    def test_register_new_module(self):
+        result = self.gw.register_module("custom_plugin", "Custom Plugin")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], BLOCKED)
+
+    def test_stats(self):
+        stats = self.gw.stats()
+        self.assertGreater(stats["total_modules"], 0)
+        self.assertIn("BLOCKED", stats["by_status"])
+        self.assertIn("ACTIVE", stats["by_status"])
+
+    def test_connection_policy(self):
+        policy = self.gw.get_connection_policy()
+        self.assertTrue(policy["verify_identity"])
+        self.assertTrue(policy["owner_approval_required"])
+        self.assertFalse(policy["billing_enabled"])
+        self.assertFalse(policy["bypass_lockdown"])
+
+    def test_audit_log(self):
+        self.gw.request_route("meta_ai_adapter", "read")
+        self.gw.request_route("plugin_registry", "read")
+        log = self.gw.get_audit_log()
+        self.assertGreaterEqual(len(log), 2)
+
+    def test_list_modules(self):
+        modules = self.gw.list_modules()
+        self.assertGreaterEqual(len(modules), 12)
+
+    def test_get_active(self):
+        active = self.gw.get_active()
+        active_ids = {m["module_id"] for m in active}
+        self.assertIn("plugin_registry", active_ids)
+        self.assertIn("security_guardian", active_ids)
 
 
 if __name__ == "__main__":
