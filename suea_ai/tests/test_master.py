@@ -32,9 +32,15 @@ from suea_ai.core.plugin_validator import validate_plugin, validate_and_register
 from suea_ai.core.plugin_lifecycle import PluginLifecycle
 from suea_ai.core.connector_manager import ConnectorManager
 from suea_ai.core.audit_log import AuditLog
+from suea_ai.security.authentication import AuthManager
+from suea_ai.security.owner_approval import OwnerApproval, ACTIONS_REQUIRING_APPROVAL
+from suea_ai.automation.health_monitor import HealthMonitor
+from suea_ai.automation.scheduler import Scheduler
 from suea_ai.analyzers.product_ranking import compute_score, rank_products
 from suea_ai.analyzers.video_performance import engagement_rate, analyze_videos
 from suea_ai.analyzers.ads_profit import compute_roas, compute_cpc, analyze_ads
+from suea_ai.analyzers.sales_growth import growth_rate, moving_average, analyze_sales
+from suea_ai.analyzers.commission import compute_commission, analyze_commissions, top_products_by_commission
 
 
 class TestMasterConfig(unittest.TestCase):
@@ -856,6 +862,229 @@ class TestAuditLog(unittest.TestCase):
         result = self.al.clear(before_id=3)
         self.assertTrue(result["ok"])
         self.assertEqual(result["remaining"], 3)
+
+
+class TestAuthManager(unittest.TestCase):
+    def setUp(self):
+        self.am = AuthManager()
+
+    def test_issue_and_validate(self):
+        issued = self.am.issue_token("owner")
+        self.assertTrue(issued["ok"])
+        valid = self.am.validate_token(issued["token_id"])
+        self.assertTrue(valid["valid"])
+        self.assertEqual(valid["role"], "owner")
+
+    def test_invalid_token(self):
+        result = self.am.validate_token("fake_token")
+        self.assertFalse(result["valid"])
+
+    def test_revoke(self):
+        issued = self.am.issue_token("viewer")
+        self.am.revoke_token(issued["token_id"])
+        result = self.am.validate_token(issued["token_id"])
+        self.assertFalse(result["valid"])
+        self.assertEqual(result["reason"], "token_revoked")
+
+    def test_revoke_all(self):
+        self.am.issue_token("owner")
+        self.am.issue_token("viewer")
+        result = self.am.revoke_all()
+        self.assertEqual(result["revoked"], 2)
+
+    def test_failed_attempts_lockout(self):
+        for _ in range(5):
+            self.am.record_failed_attempt("user1")
+        self.assertTrue(self.am.is_locked("user1"))
+
+    def test_reset_failed(self):
+        for _ in range(5):
+            self.am.record_failed_attempt("user2")
+        self.am.reset_failed("user2")
+        self.assertFalse(self.am.is_locked("user2"))
+
+    def test_stats(self):
+        self.am.issue_token("owner")
+        stats = self.am.stats()
+        self.assertEqual(stats["total"], 1)
+        self.assertEqual(stats["valid"], 1)
+
+
+class TestOwnerApproval(unittest.TestCase):
+    def setUp(self):
+        self.oa = OwnerApproval()
+
+    def test_requires_approval(self):
+        self.assertTrue(self.oa.requires_approval("plugin_install"))
+        self.assertFalse(self.oa.requires_approval("read_data"))
+
+    def test_auto_approve_non_critical(self):
+        result = self.oa.request("read_data")
+        self.assertTrue(result["auto_approved"])
+
+    def test_request_pending(self):
+        result = self.oa.request("plugin_install", "Install test plugin")
+        self.assertEqual(result["status"], "PENDING")
+        self.assertIn("request_id", result)
+
+    def test_approve(self):
+        req = self.oa.request("lockdown_release")
+        result = self.oa.approve(req["request_id"], "OWNER_CONFIRMED")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], "APPROVED")
+
+    def test_deny(self):
+        req = self.oa.request("billing_change")
+        result = self.oa.deny(req["request_id"], "OWNER_CONFIRMED")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], "DENIED")
+
+    def test_wrong_owner_token(self):
+        req = self.oa.request("credential_manage")
+        result = self.oa.approve(req["request_id"], "wrong_token")
+        self.assertFalse(result["ok"])
+
+    def test_pending_list(self):
+        self.oa.request("plugin_install")
+        self.oa.request("external_connection")
+        pending = self.oa.pending()
+        self.assertEqual(len(pending), 2)
+
+
+class TestHealthMonitor(unittest.TestCase):
+    def setUp(self):
+        self.hm = HealthMonitor()
+        self.hm.register_module("gateway", "Universal Gateway")
+        self.hm.register_module("registry", "Plugin Registry")
+
+    def test_report_healthy(self):
+        result = self.hm.report_healthy("gateway")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], "HEALTHY")
+
+    def test_report_failure_degraded(self):
+        self.hm.report_failure("gateway", "timeout")
+        status = self.hm.get_status("gateway")
+        self.assertEqual(status["status"], "DEGRADED")
+
+    def test_report_failure_down(self):
+        for _ in range(3):
+            self.hm.report_failure("gateway")
+        status = self.hm.get_status("gateway")
+        self.assertEqual(status["status"], "DOWN")
+
+    def test_down_modules(self):
+        for _ in range(3):
+            self.hm.report_failure("gateway")
+        self.hm.report_healthy("registry")
+        down = self.hm.get_down_modules()
+        self.assertEqual(len(down), 1)
+
+    def test_overall_health(self):
+        self.hm.report_healthy("gateway")
+        self.hm.report_healthy("registry")
+        overall = self.hm.overall_health()
+        self.assertEqual(overall["status"], "HEALTHY")
+
+    def test_overall_down(self):
+        for _ in range(3):
+            self.hm.report_failure("gateway")
+        overall = self.hm.overall_health()
+        self.assertEqual(overall["status"], "DOWN")
+
+    def test_alerts(self):
+        self.hm.report_failure("gateway", "connection lost")
+        alerts = self.hm.get_alerts()
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts[0]["detail"], "connection lost")
+
+
+class TestScheduler(unittest.TestCase):
+    def setUp(self):
+        self.sched = Scheduler()
+
+    def test_default_tasks(self):
+        tasks = self.sched.list_tasks()
+        self.assertGreaterEqual(len(tasks), 7)
+
+    def test_add_task(self):
+        result = self.sched.add_task("custom", "Custom Task", 120)
+        self.assertTrue(result["ok"])
+
+    def test_add_duplicate(self):
+        result = self.sched.add_task("heartbeat", "Duplicate", 30)
+        self.assertFalse(result["ok"])
+
+    def test_add_too_short(self):
+        result = self.sched.add_task("fast", "Too Fast", 5)
+        self.assertFalse(result["ok"])
+
+    def test_enable_disable(self):
+        self.sched.disable("heartbeat")
+        task = self.sched.get_task("heartbeat")
+        self.assertFalse(task["enabled"])
+        self.sched.enable("heartbeat")
+        task = self.sched.get_task("heartbeat")
+        self.assertTrue(task["enabled"])
+
+    def test_mark_run(self):
+        result = self.sched.mark_run("backup")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["run_count"], 1)
+
+    def test_stats(self):
+        stats = self.sched.stats()
+        self.assertGreaterEqual(stats["total_tasks"], 7)
+        self.assertGreaterEqual(stats["enabled"], 7)
+
+
+class TestSalesGrowth(unittest.TestCase):
+    def test_growth_rate(self):
+        self.assertEqual(growth_rate(150, 100), 50.0)
+        self.assertEqual(growth_rate(0, 0), 0.0)
+        self.assertEqual(growth_rate(100, 0), 100.0)
+
+    def test_moving_average(self):
+        result = moving_average([10, 20, 30, 40, 50], window=3)
+        self.assertEqual(len(result), 5)
+        self.assertEqual(result[0], 10.0)
+
+    def test_analyze_sales(self):
+        data = [
+            {"date": "2026-01-01", "revenue": 100},
+            {"date": "2026-01-02", "revenue": 200},
+            {"date": "2026-01-03", "revenue": 300},
+            {"date": "2026-01-04", "revenue": 400},
+        ]
+        result = analyze_sales(data)
+        self.assertEqual(result["total_days"], 4)
+        self.assertEqual(result["total_revenue"], 1000)
+        self.assertGreater(result["growth_pct"], 0)
+
+
+class TestCommission(unittest.TestCase):
+    def test_compute_commission(self):
+        self.assertEqual(compute_commission(1000, 10), 100.0)
+        self.assertEqual(compute_commission(0, 10), 0.0)
+
+    def test_analyze_commissions(self):
+        orders = [
+            {"sale_amount": 500, "rate_pct": 10},
+            {"sale_amount": 800, "rate_pct": 8},
+        ]
+        result = analyze_commissions(orders)
+        self.assertEqual(result["total_orders"], 2)
+        self.assertEqual(result["total_commission"], 114.0)
+
+    def test_top_products(self):
+        orders = [
+            {"product_id": "A", "sale_amount": 1000, "rate_pct": 10},
+            {"product_id": "B", "sale_amount": 500, "rate_pct": 20},
+            {"product_id": "A", "sale_amount": 800, "rate_pct": 10},
+        ]
+        top = top_products_by_commission(orders, limit=2)
+        self.assertEqual(top[0]["product_id"], "A")
+        self.assertEqual(top[0]["total_commission"], 180.0)
 
 
 if __name__ == "__main__":
