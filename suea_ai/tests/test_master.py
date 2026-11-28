@@ -28,6 +28,10 @@ from suea_ai.automation.recovery_worker import RecoveryWorker
 from suea_ai.connectors.meta_ai_connector import MetaAIConnector
 from suea_ai.connectors.base_connector import get_all_connector_status
 from suea_ai.core.universal_gateway import UniversalPluginGateway, BLOCKED, ACTIVE
+from suea_ai.core.plugin_validator import validate_plugin, validate_and_register
+from suea_ai.core.plugin_lifecycle import PluginLifecycle
+from suea_ai.core.connector_manager import ConnectorManager
+from suea_ai.core.audit_log import AuditLog
 from suea_ai.analyzers.product_ranking import compute_score, rank_products
 from suea_ai.analyzers.video_performance import engagement_rate, analyze_videos
 from suea_ai.analyzers.ads_profit import compute_roas, compute_cpc, analyze_ads
@@ -678,6 +682,180 @@ class TestUniversalGateway(unittest.TestCase):
         active_ids = {m["module_id"] for m in active}
         self.assertIn("plugin_registry", active_ids)
         self.assertIn("security_guardian", active_ids)
+
+
+class TestPluginValidator(unittest.TestCase):
+    def test_valid_plugin(self):
+        result = validate_plugin("test_p", "Test Plugin")
+        self.assertTrue(result["valid"])
+
+    def test_invalid_category(self):
+        result = validate_plugin("p1", "P1", category="wrong_cat")
+        self.assertFalse(result["valid"])
+
+    def test_invalid_risk(self):
+        result = validate_plugin("p1", "P1", risk_level="R9")
+        self.assertFalse(result["valid"])
+
+    def test_high_risk_requires_auth(self):
+        result = validate_plugin("p1", "P1", risk_level="R4", requires_auth=False)
+        self.assertFalse(result["valid"])
+        result2 = validate_plugin("p1", "P1", risk_level="R4", requires_auth=True)
+        self.assertTrue(result2["valid"])
+
+    def test_empty_plugin_id(self):
+        result = validate_plugin("", "Name")
+        self.assertFalse(result["valid"])
+
+    def test_validate_and_register(self):
+        reg = PluginRegistry()
+        result = validate_and_register(reg, "vr1", "VR Plugin 1")
+        self.assertTrue(result["ok"])
+        dup = validate_and_register(reg, "vr1", "VR Plugin 1")
+        self.assertFalse(dup["ok"])
+
+
+class TestPluginLifecycle(unittest.TestCase):
+    def setUp(self):
+        self.reg = PluginRegistry()
+        self.reg.register("lc1", "LC Plugin 1")
+        self.lc = PluginLifecycle(self.reg)
+
+    def test_activate(self):
+        result = self.lc.activate("lc1")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], "ACTIVE")
+
+    def test_suspend_active(self):
+        self.lc.activate("lc1")
+        result = self.lc.suspend("lc1", reason="maintenance")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], "SUSPENDED")
+
+    def test_invalid_transition(self):
+        result = self.lc.suspend("lc1")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"], "invalid_transition")
+
+    def test_remove(self):
+        self.lc.activate("lc1")
+        result = self.lc.remove("lc1")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], "REMOVED")
+
+    def test_removed_cannot_reactivate(self):
+        self.lc.activate("lc1")
+        self.lc.remove("lc1")
+        result = self.lc.reactivate("lc1")
+        self.assertFalse(result["ok"])
+
+    def test_reactivate_suspended(self):
+        self.lc.activate("lc1")
+        self.lc.suspend("lc1")
+        result = self.lc.reactivate("lc1")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], "ACTIVE")
+
+    def test_history(self):
+        self.lc.activate("lc1")
+        self.lc.suspend("lc1")
+        history = self.lc.get_history("lc1")
+        self.assertEqual(len(history), 2)
+
+    def test_bulk_suspend(self):
+        self.reg.register("lc2", "LC Plugin 2")
+        self.lc.activate("lc1")
+        self.lc.activate("lc2")
+        result = self.lc.bulk_suspend(["lc1", "lc2"], "batch test")
+        self.assertEqual(result["suspended"], 2)
+
+
+class TestConnectorManager(unittest.TestCase):
+    def setUp(self):
+        self.cm = ConnectorManager()
+
+    def test_defaults_registered(self):
+        all_c = self.cm.list_all()
+        self.assertGreaterEqual(len(all_c), 10)
+
+    def test_connect_disconnect(self):
+        result = self.cm.connect("windsor")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], "CONNECTED")
+        connected = self.cm.list_connected()
+        self.assertEqual(len(connected), 1)
+        result2 = self.cm.disconnect("windsor")
+        self.assertTrue(result2["ok"])
+
+    def test_disconnect_all(self):
+        self.cm.connect("windsor")
+        self.cm.connect("metricool")
+        result = self.cm.disconnect_all()
+        self.assertEqual(result["disconnected"], 2)
+
+    def test_health_check(self):
+        result = self.cm.health_check("claude")
+        self.assertEqual(result["connector_id"], "claude")
+        self.assertTrue(result["requires_credential"])
+
+    def test_register_new(self):
+        result = self.cm.register("custom_c", "Custom", "custom")
+        self.assertTrue(result["ok"])
+
+    def test_stats(self):
+        stats = self.cm.stats()
+        self.assertGreater(stats["total"], 0)
+        self.assertIn("google", stats["by_provider"])
+
+    def test_list_by_provider(self):
+        google = self.cm.list_by_provider("google")
+        self.assertGreaterEqual(len(google), 2)
+
+    def test_not_found(self):
+        result = self.cm.connect("nonexistent")
+        self.assertFalse(result["ok"])
+
+
+class TestAuditLog(unittest.TestCase):
+    def setUp(self):
+        self.al = AuditLog()
+
+    def test_log_and_count(self):
+        self.al.log("REGISTER", "plugin_registry", detail="test plugin")
+        self.al.log("CONNECT", "connector_manager")
+        self.assertEqual(self.al.count(), 2)
+
+    def test_query_by_module(self):
+        self.al.log("REGISTER", "plugin_registry")
+        self.al.log("CONNECT", "connector_manager")
+        results = self.al.query(module="plugin_registry")
+        self.assertEqual(len(results), 1)
+
+    def test_query_by_risk(self):
+        self.al.log("BLOCK", "gateway", risk="R5")
+        self.al.log("READ", "windsor", risk="R1")
+        results = self.al.query(risk="R5")
+        self.assertEqual(len(results), 1)
+
+    def test_stats(self):
+        self.al.log("A", "m1")
+        self.al.log("B", "m2")
+        stats = self.al.stats()
+        self.assertEqual(stats["total"], 2)
+        self.assertIn("m1", stats["by_module"])
+
+    def test_recent(self):
+        for i in range(5):
+            self.al.log(f"action_{i}", "mod")
+        recent = self.al.recent(limit=3)
+        self.assertEqual(len(recent), 3)
+
+    def test_clear(self):
+        for i in range(5):
+            self.al.log(f"action_{i}", "mod")
+        result = self.al.clear(before_id=3)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["remaining"], 3)
 
 
 if __name__ == "__main__":
